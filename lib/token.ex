@@ -1,18 +1,9 @@
 defmodule Token do
-  @moduledoc """
-  Documentation for Token.
-  """
+  import Plug.Conn
 
-  @doc """
-  Hello world.
+  def init(opts), do: opts
 
-  ## Examples
-
-      iex> Token.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def call(conn, _opts) do
+    send_resp(conn, 200, "hello world")
   end
 end
