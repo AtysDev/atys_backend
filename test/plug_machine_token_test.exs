@@ -94,6 +94,15 @@ defmodule PlugMachineTokenTest do
     assert true = conn.halted
   end
 
+  test "halts if the callback doesn't return the correct signature" do
+    callback = fn _ -> @key end
+    conn = create_conn(@header)
+      |> call_plug(callback)
+    assert 500 = conn.status
+    assert "invalid_issuer_callback_response" = conn.resp_body
+    assert true = conn.halted
+  end
+
   test "halts if the signature is invalid" do
     wrong_key = <<0::256>>
     callback = fn "my_service" -> {:ok, wrong_key} end

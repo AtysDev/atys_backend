@@ -17,13 +17,14 @@ defmodule PlugMachineToken do
   def call(conn, %{get_issuer_secret_fn: get_issuer_secret_fn}) do
     with {:ok, auth_header} <- get_authorization(conn),
          {:ok, issuer} <- get_unverified_issuer(auth_header),
-         {:ok, issuer_secret} <- get_issuer_secret_fn.(issuer),
+         {:ok, issuer_secret} <- get_issuer_secret(get_issuer_secret_fn, issuer),
          :ok <- validate_issuer_secret(issuer_secret),
          jwk <- JWK.from_oct(issuer_secret),
          {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
       conn
     else
       {:error, :invalid_issuer_secret} -> send_resp(conn, 500, "invalid_issuer_secret") |> halt()
+      {:error, :invalid_issuer_callback_response} -> send_resp(conn, 500, "invalid_issuer_callback_response") |> halt()
       {:error, error} -> send_resp(conn, 403, Atom.to_string(error)) |> halt()
     end
   end
@@ -57,6 +58,14 @@ defmodule PlugMachineToken do
       end
     rescue
       _e -> {:error, :invalid_authorization_header}
+    end
+  end
+
+  defp get_issuer_secret(get_issuer_secret_fn, issuer) do
+    case get_issuer_secret_fn.(issuer) do
+      {:ok, secret} -> {:ok, secret}
+      {:error, error} -> {:error, error}
+      _ -> {:error, :invalid_issuer_callback_response}
     end
   end
 

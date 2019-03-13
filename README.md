@@ -31,19 +31,22 @@ PlugMachineToken.create_machine_token(secret, %{name: "request_server_name_goes_
 5. In the response server, add the plug to your pipeline before handling the response.
 
 ```elixir
+defmodule MachineKeyStore do
+  def get(issuer) do
+    case signer do
+        "valid_server_1" -> {:ok, <<1::256>>}
+        "valid_server_2" -> {:ok, <<99::256>>}
+        _ -> {:error, :unrecognized_signer}
+      end
+  end
+end
 defmodule MyResponseServer do
   alias Plug.Conn
   use Plug.Builder
 
-  def issuer_callback(signer) do
-    case signer do
-      "valid_server_1" -> {:ok, <<1::256>>}
-      "valid_server_2" -> {:ok, <<99::256>>}
-      _ -> {:error, :unrecognized_signer}
-    end
-  end
-
-  plug PlugMachineToken, get_issuer_secret: issuer_callback
+  plug PlugMachineToken, get_issuer_secret: &MachineKeyStore.get/1
 
   # Rest of your plug pipeline here
 ```
+
+Note that unfortunately, due to the way that the plug macros work, you need to define your get_issuer_secret function in a separate module instead of either a local function or as a anonymous function.
