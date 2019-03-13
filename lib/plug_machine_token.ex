@@ -2,7 +2,8 @@ defmodule PlugMachineToken do
   alias JOSE.{JWK, JWS, JWT}
   import Plug.Conn
 
-  @type issuer_callback :: (String.t() -> {:ok, String.t()} | {:error, atom} | {:error, String.t})
+  @type issuer_callback ::
+          (String.t() -> {:ok, String.t()} | {:error, atom} | {:error, String.t()})
 
   @jws JWS.from_map({%{alg: :jose_jws_alg_hmac}, %{"alg" => "HS256", "typ" => "JWT"}})
   @algorithms ["HS256"]
@@ -25,6 +26,16 @@ defmodule PlugMachineToken do
       {:error, :invalid_issuer_secret} -> send_resp(conn, 500, "invalid_issuer_secret") |> halt()
       {:error, error} -> send_resp(conn, 403, Atom.to_string(error)) |> halt()
     end
+  end
+
+  def create_machine_token(secret, %{name: name, expires_at: expires_at}) do
+    body = %{"iss" => name, "exp" => DateTime.to_unix(expires_at)}
+    do_create_machine_token(secret, body)
+  end
+
+  def create_machine_token(secret, %{name: name}) do
+    body = %{"iss" => name}
+    do_create_machine_token(secret, body)
   end
 
   defp get_authorization(conn) do
@@ -54,8 +65,29 @@ defmodule PlugMachineToken do
 
   defp validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
     case JWT.verify_strict(jwk, @algorithms, auth_header) do
+      {true, %JWT{fields: %{"iss" => ^issuer, "exp" => _exp}} = jwt, @jws} -> validate_expiration(jwt)
       {true, %JWT{fields: %{"iss" => ^issuer}} = jwt, @jws} -> {:ok, jwt}
       _ -> {:error, :bad_signature}
     end
+  end
+
+  defp validate_expiration(%JWT{fields: %{"exp" => exp}} = jwt) do
+    with {:ok, expires_at} <- DateTime.from_unix(exp),
+    :lt <- DateTime.compare(DateTime.utc_now(), expires_at) do
+      {:ok, jwt}
+    else
+      _ -> {:error, :bad_signature}
+    end
+  end
+
+  defp do_create_machine_token(<<_rest::size(256)>> = secret, body) do
+    jwk = JWK.from_oct(secret)
+
+    jwt =
+      JWT.sign(jwk, %{"alg" => "HS256"}, body)
+      |> JWS.compact()
+      |> elem(1)
+
+    "Bearer " <> jwt
   end
 end
