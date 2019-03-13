@@ -22,4 +22,5 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 plug_machine_token-*.tar
 
+.vscode
 .elixir_ls

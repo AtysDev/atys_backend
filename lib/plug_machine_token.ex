@@ -2,9 +2,12 @@ defmodule PlugMachineToken do
   alias JOSE.{JWK, JWS, JWT}
   import Plug.Conn
 
+  @type issuer_callback :: (String.t() -> {:ok, String.t()} | {:error, String.t()})
+
   @jws JWS.from_map({%{alg: :jose_jws_alg_hmac}, %{"alg" => "HS256", "typ" => "JWT"}})
   @algorithms ["HS256"]
 
+  @spec init(keyword()) :: %{get_issuer_secret_fn: issuer_callback}
   def init(options) do
     callback = Keyword.fetch!(options, :get_issuer_secret)
     %{get_issuer_secret_fn: callback}
@@ -16,11 +19,10 @@ defmodule PlugMachineToken do
          {:ok, issuer_secret} <- get_issuer_secret_fn.(issuer),
          :ok <- validate_issuer_secret(issuer_secret),
          jwk <- JWK.from_oct(issuer_secret),
-         {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer)
-         do
-        conn
-      else
-        {:error, error} -> send_resp(conn, 403, Atom.to_string(error)) |> halt()
+         {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
+      conn
+    else
+      {:error, error} -> send_resp(conn, 403, Atom.to_string(error)) |> halt()
     end
   end
 
