@@ -2,7 +2,7 @@ defmodule PlugMachineToken do
   alias JOSE.{JWK, JWS, JWT}
   import Plug.Conn
 
-  @type issuer_callback :: (String.t() -> {:ok, String.t()} | {:error, String.t()})
+  @type issuer_callback :: (String.t() -> {:ok, String.t()} | {:error, atom} | {:error, String.t})
 
   @jws JWS.from_map({%{alg: :jose_jws_alg_hmac}, %{"alg" => "HS256", "typ" => "JWT"}})
   @algorithms ["HS256"]
@@ -22,13 +22,16 @@ defmodule PlugMachineToken do
          {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
       conn
     else
+      {:error, :invalid_issuer_secret} -> send_resp(conn, 500, "invalid_issuer_secret") |> halt()
       {:error, error} -> send_resp(conn, 403, Atom.to_string(error)) |> halt()
     end
   end
 
   defp get_authorization(conn) do
+    # cowboy req headers are always lowercase
+    # https://github.com/ninenines/cowboy/blob/master/doc/src/manual/cowboy_req.headers.asciidoc
     case get_req_header(conn, "authorization") do
-      ["Authorization: Bearer " <> value] -> {:ok, value}
+      ["Bearer " <> value] -> {:ok, value}
       [_value] -> {:error, :authorization_header_not_bearer}
       [_value | _values] -> {:error, :too_many_authorization_headers}
       _ -> {:error, :missing_authorization_header}
