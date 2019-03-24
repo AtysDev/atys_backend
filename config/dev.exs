@@ -7,7 +7,8 @@ config :auth,
     database: "atys_dev",
     hostname: "localhost",
     port: "5432"
-  ]
+  ],
+  email_provider: Auth.MockEmailProvider
 
 config :cors_plug,
   origin: ["http://localhost", "http://localhost:4001"],

@@ -7,7 +7,8 @@ config :auth,
     database: System.get_env("DB_NAME"),
     hostname: System.get_env("DB_HOST"),
     port: System.get_env("DB_PORT")
-  ]
+  ],
+  email_provider: Auth.EmailProviderImpl
 
 config :cors_plug,
   origin: ["https://atys.dev"],
