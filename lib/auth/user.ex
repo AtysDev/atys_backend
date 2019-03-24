@@ -1,4 +1,7 @@
 defmodule Auth.User do
+
+  defstruct id: nil, password_hash: nil, user_data: %{}, confirmed?: false
+
   def normalize_email(email) do
     String.downcase(email)
     |> String.split("@")
@@ -50,12 +53,26 @@ defmodule Auth.User do
     end
   end
 
+  def validate_password(%Auth.User{password_hash: hash}, password) do
+    case Pbkdf2.verify_pass(password, hash) do
+      true -> :ok
+      false -> {:error, :invalid_password}
+    end
+  end
+
   def find(email: email) do
     normalized = normalize_email(email)
 
     with {:ok, %Postgrex.Result{rows: [row]}} <-
            Postgrex.query(:db, "SELECT * from users where normalized_email = $1", [normalized]) do
-      {:ok, row}
+      [id, _email_normalized, password_hash, user_data, confirmed] = row
+      user = %Auth.User{
+        id: id,
+        password_hash: password_hash,
+        user_data: Jason.decode!(user_data),
+        confirmed?: confirmed
+      }
+      {:ok, user}
     else
       {:ok, _result} -> {:error, :email_not_found}
       {:error, error} -> {:error, error}

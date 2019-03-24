@@ -8,7 +8,8 @@ config :auth,
     hostname: "localhost",
     port: "5432"
   ],
-  email_provider: Auth.MockEmailProvider
+  email_provider: Auth.MockEmailProvider,
+  token_url: "http://localhost:4000/"
 
 config :cors_plug,
   origin: ["http://localhost", "http://localhost:4001"],
