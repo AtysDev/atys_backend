@@ -4,7 +4,9 @@ defmodule Auth.Application do
 
   def start(_type, _args) do
     children = [
-      {Postgrex, [{:name, :db} | Application.get_env(:auth, :db_conn)]}
+      {Postgrex, [{:name, :db} | Application.get_env(:auth, :db_conn)]},
+      {Sider, %{capacity: 100_000, name: :email_tokens}},
+      Plug.Cowboy.child_spec(scheme: :http, plug: Auth, options: [port: 4001])
     ]
 
     opts = [strategy: :one_for_one, name: Auth.Supervisor]

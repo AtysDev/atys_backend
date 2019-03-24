@@ -19,11 +19,14 @@ defmodule Auth.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:cors_plug, "~> 2.0"},
       {:jason, "~> 1.1"},
+      {:pbkdf2_elixir, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:postgrex, "~> 0.14.1"}    ]
+      {:postgrex, "~> 0.14.1"},
+      {:sider, "~> 0.1.0"}
+    ]
   end
 end

@@ -1,3 +1,3 @@
 DROP TABLE users;
-CREATE TABLE users(id INT PRIMARY KEY UNIQUE NOT NULL, email_hash TEXT NOT NULL, password_key TEXT NOT NULL, user_data_encrypted TEXT NOT NULL, confirmed boolean DEFAULT false);
-CREATE INDEX on users (email_hash);
+CREATE TABLE users(id SERIAL PRIMARY KEY UNIQUE NOT NULL, normalized_email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, user_data TEXT, confirmed boolean DEFAULT false);
+CREATE INDEX on users (normalized_email);

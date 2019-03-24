@@ -1,18 +1,18 @@
 defmodule Auth do
-  @moduledoc """
-  Documentation for Auth.
-  """
+  @moduledoc false
+  use Plug.Router
+  alias Auth.Routes
 
-  @doc """
-  Hello world.
+  plug(CORSPlug)
+  plug(:match)
+  plug(Plug.Parsers, parsers: [:urlencoded])
+  plug(:dispatch)
 
-  ## Examples
+  post "/register" do
+    Routes.Register.create(conn)
+  end
 
-      iex> Auth.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  match _ do
+    send_resp(conn, 404, "not found")
   end
 end
