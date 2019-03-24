@@ -40,6 +40,16 @@ defmodule Auth.User do
     end
   end
 
+  def confirm_email(id) do
+    Postgrex.query(:db, "UPDATE users set confirmed = true WHERE id = $1", [id])
+    |> case do
+      {:ok, %Postgrex.Result{num_rows: 1}} -> :ok
+      {:ok, %Postgrex.Result{num_rows: 0}} -> {:error, :user_id_invalid}
+      {:ok, _result} -> {:error, :unexpected_error}
+      {:error, error} -> {:error, error}
+    end
+  end
+
   def find(email: email) do
     normalized = normalize_email(email)
 

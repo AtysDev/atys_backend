@@ -12,6 +12,10 @@ defmodule Auth do
     Routes.Register.create(conn)
   end
 
+  post "/confirm" do
+    Routes.Confirm.create(conn)
+  end
+
   match _ do
     send_resp(conn, 404, "not found")
   end
