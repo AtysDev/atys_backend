@@ -23,6 +23,7 @@ defmodule Auth.MixProject do
     [
       {:cors_plug, "~> 2.0"},
       {:jason, "~> 1.1"},
+      {:mojito, "~> 0.1.0"},
       {:pbkdf2_elixir, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, "~> 0.14.1"},

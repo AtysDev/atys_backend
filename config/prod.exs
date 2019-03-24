@@ -9,7 +9,8 @@ config :auth,
     port: System.get_env("DB_PORT")
   ],
   email_provider: Auth.EmailProviderImpl,
-  token_url: System.get_env("TOKEN_URL")
+  token_url: System.get_env("TOKEN_URL"),
+  token_auth_header: System.get_env("TOKEN_AUTH")
 
 config :cors_plug,
   origin: ["https://atys.dev"],

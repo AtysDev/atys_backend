@@ -9,7 +9,8 @@ config :auth,
     port: "5432"
   ],
   email_provider: Auth.MockEmailProvider,
-  token_url: "http://localhost:4000/"
+  token_url: "http://localhost:4000/",
+  token_auth_header: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhdXRoIn0.KZIiseeYISnFQXDFAIx9MPAftLfdvY7uABGBpl21Aww"
 
 config :cors_plug,
   origin: ["http://localhost", "http://localhost:4001"],
