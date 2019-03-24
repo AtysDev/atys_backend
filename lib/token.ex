@@ -3,11 +3,12 @@ defmodule Token do
   alias Token.MachineSecretStore
   use Plug.Builder
 
+  @thirty_minutes 30 * 60 * 1000
+
   plug PlugMachineToken, get_issuer_secret: &MachineSecretStore.get/1
   plug Plug.Parsers, parsers: [:urlencoded]
   plug :route
 
-  @thirty_minutes 30 * 60 * 1000
   def route(%Conn{path_info: [], method: "POST"} = conn, opts) do
     timeout = Keyword.get(opts, :timeout, @thirty_minutes)
 
