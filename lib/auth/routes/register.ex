@@ -6,7 +6,7 @@ defmodule Auth.Routes.Register do
   use Plug.Builder
 
   plug(SideUnchanneler, send_after_ms: 500)
-  plug :create
+  plug(:create)
   plug(SideUnchanneler, execute: true)
 
   def create(%Conn{path_info: ["register"], method: "POST"} = conn, _opts) do
@@ -21,6 +21,7 @@ defmodule Auth.Routes.Register do
         Conn.resp(conn, 500, "Internal error")
     end
   end
+
   def create(conn, _opts), do: conn
 
   defp create_and_send_email(email: email, password: password) do

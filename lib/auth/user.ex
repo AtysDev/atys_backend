@@ -1,5 +1,4 @@
 defmodule Auth.User do
-
   defstruct id: nil, password_hash: nil, user_data: %{}, confirmed?: false
 
   def normalize_email(email) do
@@ -45,12 +44,13 @@ defmodule Auth.User do
 
   def confirm_email(id) do
     Postgrex.query(:db, "UPDATE users set confirmed = true WHERE id = $1", [id])
-    |> case do
-      {:ok, %Postgrex.Result{num_rows: 1}} -> :ok
-      {:ok, %Postgrex.Result{num_rows: 0}} -> {:error, :user_id_invalid}
-      {:ok, _result} -> {:error, :unexpected_error}
-      {:error, error} -> {:error, error}
-    end
+    |> parse_update_result()
+  end
+
+  def update_password(id, password) do
+    hashed = hash_password(password)
+    Postgrex.query(:db, "UPDATE users set password_hash = $2 WHERE id = $1", [id, hashed])
+    |> parse_update_result()
   end
 
   def validate_password(%Auth.User{password_hash: hash}, password) do
@@ -66,15 +66,26 @@ defmodule Auth.User do
     with {:ok, %Postgrex.Result{rows: [row]}} <-
            Postgrex.query(:db, "SELECT * from users where normalized_email = $1", [normalized]) do
       [id, _email_normalized, password_hash, user_data, confirmed] = row
+
       user = %Auth.User{
         id: id,
         password_hash: password_hash,
         user_data: Jason.decode!(user_data),
         confirmed?: confirmed
       }
+
       {:ok, user}
     else
       {:ok, _result} -> {:error, :email_not_found}
+      {:error, error} -> {:error, error}
+    end
+  end
+
+  defp parse_update_result(query_result) do
+    case query_result do
+      {:ok, %Postgrex.Result{num_rows: 1}} -> :ok
+      {:ok, %Postgrex.Result{num_rows: 0}} -> {:error, :user_id_invalid}
+      {:ok, _result} -> {:error, :unexpected_error}
       {:error, error} -> {:error, error}
     end
   end
