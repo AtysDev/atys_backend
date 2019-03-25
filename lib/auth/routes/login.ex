@@ -7,14 +7,14 @@ defmodule Auth.Routes.Login do
     {:ok, user} <- User.find(email: email),
     :ok <- User.validate_password(user, password),
     {:ok, token} <- get_login_token(user) do
-      Conn.send_resp(conn, 200, token)
+      Conn.resp(conn, 200, token)
     else
-      {:error, :missing_email_or_password} -> Conn.send_resp(conn, 400, "missing email or password")
-      {:error, :email_not_found} -> Conn.send_resp(conn, 403, "Invalid email or password")
-      {:error, :invalid_password} -> Conn.send_resp(conn, 403, "Invalid email or password")
-      {:error, :token_unavailable_failure} -> Conn.send_resp(conn, 503, "Server Unavailable")
-      {:error, :token_server_failure} -> Conn.send_resp(conn, 500, "Internal error")
-      {:error, _error} -> Conn.send_resp(conn, 500, "Internal error")
+      {:error, :missing_email_or_password} -> Conn.resp(conn, 400, "missing email or password")
+      {:error, :email_not_found} -> Conn.resp(conn, 403, "Invalid email or password")
+      {:error, :invalid_password} -> Conn.resp(conn, 403, "Invalid email or password")
+      {:error, :token_unavailable_failure} -> Conn.resp(conn, 503, "Server Unavailable")
+      {:error, :token_server_failure} -> Conn.resp(conn, 500, "Internal error")
+      {:error, _error} -> Conn.resp(conn, 500, "Internal error")
     end
   end
 

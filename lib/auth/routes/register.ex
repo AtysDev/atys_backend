@@ -6,13 +6,13 @@ defmodule Auth.Routes.Register do
   def create(conn) do
     with {:ok, {email, password}} <- get_values(conn.body_params),
          :ok <- create_and_send_email(email: email, password: password) do
-      Conn.send_resp(conn, 200, "check_email")
+      Conn.resp(conn, 200, "check_email")
     else
       {:error, :missing_email_or_password} ->
-        Conn.send_resp(conn, 400, "Missing email or password")
+        Conn.resp(conn, 400, "Missing email or password")
 
       _ ->
-        Conn.send_resp(conn, 500, "Internal error")
+        Conn.resp(conn, 500, "Internal error")
     end
   end
 

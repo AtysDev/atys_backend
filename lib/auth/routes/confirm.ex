@@ -7,11 +7,11 @@ defmodule Auth.Routes.Confirm do
          {:ok, id} <- validate_token(token),
          :ok <- User.confirm_email(id) do
           Sider.remove(:email_tokens, token)
-          Conn.send_resp(conn, 200, "email confirmed")
+          Conn.resp(conn, 200, "email confirmed")
     else
-      {:error, :missing_token} -> Conn.send_resp(conn, 400, "missing token")
-      {:error, :invalid_token} -> Conn.send_resp(conn, 403, "invalid token")
-      {:error, _error} -> Conn.send_resp(conn, 500, "Internal error")
+      {:error, :missing_token} -> Conn.resp(conn, 400, "missing token")
+      {:error, :invalid_token} -> Conn.resp(conn, 403, "invalid token")
+      {:error, _error} -> Conn.resp(conn, 500, "Internal error")
     end
   end
 

@@ -21,6 +21,7 @@ defmodule Auth.MixProject do
 
   defp deps do
     [
+      {:atys, git: "git@github.com:AtysDev/atys.git", branch: "master"},
       {:cors_plug, "~> 2.0"},
       {:jason, "~> 1.1"},
       {:mojito, "~> 0.1.0"},
