@@ -2,8 +2,14 @@ defmodule Auth.Routes.Register do
   alias Plug.Conn
   alias Auth.User
   alias Auth.Email
+  alias Atys.Plugs.SideUnchanneler
+  use Plug.Builder
 
-  def create(conn) do
+  plug(SideUnchanneler, send_after_ms: 500)
+  plug :create
+  plug(SideUnchanneler, execute: true)
+
+  def create(%Conn{path_info: ["register"], method: "POST"} = conn, _opts) do
     with {:ok, {email, password}} <- get_values(conn.body_params),
          :ok <- create_and_send_email(email: email, password: password) do
       Conn.resp(conn, 200, "check_email")
@@ -15,6 +21,7 @@ defmodule Auth.Routes.Register do
         Conn.resp(conn, 500, "Internal error")
     end
   end
+  def create(conn, _opts), do: conn
 
   defp create_and_send_email(email: email, password: password) do
     case User.create(email: email, password: password) do

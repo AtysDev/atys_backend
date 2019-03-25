@@ -1,30 +1,18 @@
 defmodule Auth do
   @moduledoc false
-  use Plug.Router
+  alias Plug.Conn
   alias Auth.Routes
-  alias Atys.Plugs.SideUnchanneler
+  use Plug.Builder
 
   plug(CORSPlug)
-
-  plug(SideUnchanneler, send_after_ms: 400)
-  plug(:match)
   plug(Plug.Parsers, parsers: [:urlencoded])
-  plug(:dispatch)
-  plug(SideUnchanneler, execute: true)
+  plug(Routes.Register)
+  plug(Routes.Confirm)
+  plug(Routes.Login)
+  plug :missing
 
-  post "/register" do
-    Routes.Register.create(conn)
+  def missing(%Conn{state: state} = conn, _opts) when state == :unset do
+    Conn.resp(conn, 404, "not found")
   end
-
-  post "/confirm" do
-    Routes.Confirm.create(conn)
-  end
-
-  post "/login" do
-    Routes.Login.create(conn)
-  end
-
-  match _ do
-    Plug.Conn.resp(conn, 404, "not found")
-  end
+  def missing(conn, _opts), do: conn
 end
