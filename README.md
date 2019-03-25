@@ -1,21 +1,24 @@
 # Auth
 
-**TODO: Add description**
+Web endpoint to create and log into an account
 
-## Installation
+## Usage
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `auth` to your list of dependencies in `mix.exs`:
 
-```elixir
-def deps do
-  [
-    {:auth, "~> 0.1.0"}
-  ]
-end
+### Creating an account
+
+```bash
+curl --data "email=myemail8@atys.dev&password=foobar" http://localhost:4001/register/
+ ```
+
+### Confirming the email confirmation token
+```bash
+curl --data "token=TOKEN_GOES_HERE" http://localhost:4001/confirm/
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/auth](https://hexdocs.pm/auth).
+### Logging in with your username & password
+```bash
+curl --data "myemail8@atys.dev&password=foobar" http://localhost:4001/login/
+```
 
+As a reminder, these values require the `Content-Type=application/x-www-form-urlencoded` header to be sent, which cURL does automatically.
