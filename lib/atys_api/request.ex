@@ -1,5 +1,4 @@
 defmodule AtysApi.Request do
-
   @derive Jason.Encoder
   defstruct meta: {}, data: {}
 
@@ -22,7 +21,7 @@ defmodule AtysApi.Request do
         :post -> post(url, request, opts)
       end
 
-    AtysApi.Logger.log_response(url: url, response: response, opts: opts)
+    AtysApi.Logger.log_response(url, response)
     response
   end
 
@@ -62,7 +61,7 @@ defmodule AtysApi.Request do
 
     case Mojito.request(method, url, headers, body) do
       {:ok, %Mojito.Response{} = response} ->
-        parse_response(response, request_id)
+        parse_response(response, request_id, opts)
 
       {:error, %Mojito.Error{reason: reason, message: message}} ->
         {:error,
@@ -74,7 +73,9 @@ defmodule AtysApi.Request do
     end
   end
 
-  defp parse_response(%Mojito.Response{status_code: status_code, body: body}, request_id) do
+  defp parse_response(%Mojito.Response{status_code: status_code, body: body}, request_id, opts) do
+    expected_failures = Keyword.get(opts, :expected_failures, [])
+
     case Jason.decode(body) do
       {:ok, %{"status" => "ok", "data" => data}} ->
         {:ok,
@@ -90,7 +91,8 @@ defmodule AtysApi.Request do
            status_code: status_code,
            request_id: request_id,
            reason: reason,
-           data: data
+           data: data,
+           expected: reason in expected_failures
          }}
 
       {:error, _error} ->

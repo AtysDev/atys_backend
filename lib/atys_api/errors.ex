@@ -11,6 +11,7 @@ defmodule AtysApi.Errors do
 
   defmacro reason(name) do
     Map.fetch!(@errors, name)
+
     quote do
       unquote(name)
     end

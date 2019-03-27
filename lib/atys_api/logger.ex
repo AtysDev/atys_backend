@@ -2,19 +2,15 @@ defmodule AtysApi.Logger do
   alias AtysApi.Error
   require Logger
 
-  def log_response(url: url, response: {:ok, response}, opts: _opts) do
+  def log_response(url, {:ok, response}) do
     Logger.debug("Successfully called #{url} with response #{inspect(response)}")
   end
 
-  def log_response(url: url, response: {:error, %Error{reason: reason} = error}, opts: opts) do
-    expected_failures = Keyword.get(opts, :expected_failures, [])
+  def log_response(url, {:error, %Error{reason: reason, expected: true} = error}) do
+    Logger.debug("Got an expected failure: #{reason} from #{url} with response #{inspect(error)}")
+  end
 
-    if reason in expected_failures do
-      Logger.debug(
-        "Got an expected failure: #{reason} from #{url} with response #{inspect(error)}"
-      )
-    else
-      Logger.error("Unexpected failure: #{reason} from #{url} with response #{inspect(error)}")
-    end
+  def log_response(url, {:error, %Error{reason: reason} = error}) do
+    Logger.error("Unexpected failure: #{reason} from #{url} with response #{inspect(error)}")
   end
 end

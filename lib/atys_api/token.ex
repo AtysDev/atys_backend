@@ -4,6 +4,7 @@ defmodule AtysApi.Token do
 
   def create_token(%{auth_header: auth_header, request_id: request_id, user_id: user_id}) do
     url = Application.get_env(:atys_api, :token_url)
+
     data = %{
       user_id: user_id
     }
@@ -24,6 +25,7 @@ defmodule AtysApi.Token do
 
   def get_user_id(%{auth_header: auth_header, request_id: request_id, token: token}) do
     url = Application.get_env(:atys_api, :token_url)
+
     data = %{
       token: token
     }
@@ -40,7 +42,5 @@ defmodule AtysApi.Token do
     ]
 
     Request.send(url, request_id, opts)
-
   end
-
 end

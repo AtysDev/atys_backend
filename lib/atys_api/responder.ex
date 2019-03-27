@@ -16,14 +16,15 @@ defmodule AtysApi.Responder do
   end
 
   @meta_schema %{
-    "type" => "object",
-    "properties" => %{
-      "request_id" => %{
-        "type" => "number"
-      }
-    },
-    "required" => ["request_id"]
-  } |> ExJsonSchema.Schema.resolve()
+                 "type" => "object",
+                 "properties" => %{
+                   "request_id" => %{
+                     "type" => "number"
+                   }
+                 },
+                 "required" => ["request_id"]
+               }
+               |> ExJsonSchema.Schema.resolve()
 
   def get_values(%Conn{method: "GET"} = conn, schema) do
     with conn <- Conn.fetch_query_params(conn, length: 10_000),
@@ -87,7 +88,9 @@ defmodule AtysApi.Responder do
   end
 
   defp get_json_from_query(%Conn{query_params: %{"r" => request}}), do: {:ok, request}
-  defp get_json_from_query(_conn), do: {:error, Errors.reason(:invalid_param), %{missing_field: "r"}}
+
+  defp get_json_from_query(_conn),
+    do: {:error, Errors.reason(:invalid_param), %{missing_field: "r"}}
 
   defp get_meta_and_data(%{"meta" => %{} = meta, "data" => %{} = data}), do: {:ok, meta, data}
   defp get_meta_and_data(_request), do: {:error, Errors.reason(:cannot_decode_request)}
