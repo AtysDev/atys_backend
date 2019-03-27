@@ -20,6 +20,7 @@ defmodule Token.MixProject do
 
   defp deps do
     [
+      {:atys_api, git: "git@github.com:AtysDev/atys_api.git", branch: "master"},
       {:jason, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
       {:plug_machine_token, git: "git@github.com:AtysDev/plug_machine_token.git", branch: "master"},

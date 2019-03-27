@@ -1,36 +1,51 @@
 defmodule Token do
+  alias AtysApi.{Errors, Responder}
   alias Plug.Conn
   alias Token.MachineSecretStore
+  require AtysApi.Errors
   use Plug.Builder
 
   @thirty_minutes 30 * 60 * 1000
 
   plug PlugMachineToken, get_issuer_secret: &MachineSecretStore.get/1
-  plug Plug.Parsers, parsers: [:urlencoded]
+  plug AtysApi.PlugJson
   plug :route
 
-  def route(%Conn{path_info: [], method: "POST"} = conn, opts) do
-    timeout = Keyword.get(opts, :timeout, @thirty_minutes)
+  @create_token_schema %{
+    "type" => "object",
+    "properties" => %{
+      "user_id" => %{
+        "type" => "number"
+      }
+    },
+    "required" => ["user_id"]
+  } |> ExJsonSchema.Schema.resolve()
 
-    with {:ok, value} <- get_value(conn.body_params),
-    token <- create_token(),
-    :ok <- Sider.set(:token_cache, token, value, timeout)
-    do
-      Conn.send_resp(conn, 200, token)
+  @get_user_id_schema %{
+    "type" => "object",
+    "properties" => %{
+      "token" => %{
+        "type" => "string"
+      }
+    },
+    "required" => ["token"]
+  } |> ExJsonSchema.Schema.resolve()
+
+  def route(%Conn{path_info: [], method: "POST"} = conn, _opts) do
+    with {:ok, conn, %{data: %{"user_id" => user_id}}} <- Responder.get_values(conn, @create_token_schema),
+     {:ok, token} <- set_token(user_id) do
+      Responder.respond(conn, data: %{token: token}, send_response: true)
     else
-      {:error, :missing_v_param} -> Conn.send_resp(conn, 400, "missing value query")
-      {:error, :max_capacity} -> Conn.send_resp(conn, 503, "Token cache is full")
+      error -> Responder.handle_error(conn, error)
     end
   end
 
   def route(%Conn{path_info: [], method: "GET"} = conn, _opts) do
-    with conn <- Conn.fetch_query_params(conn, length: 10_000),
-    {:ok, token} <- get_value(conn.query_params),
-    {:ok, value} <- Sider.get(:token_cache, token) do
-      Conn.send_resp(conn, 200, value)
+    with {:ok, conn, %{data: %{"token" => token}}} <- Responder.get_values(conn, @get_user_id_schema),
+    {:ok, user_id} <- get_user_id(token) do
+      Responder.respond(conn, data: %{user_id: user_id}, send_response: true)
     else
-      {:error, :missing_v_param} -> Conn.send_resp(conn, 400, "missing value query")
-      {:error, :missing_key} -> Conn.send_resp(conn, 404, "Token not valid")
+      error -> Responder.handle_error(conn, error)
     end
   end
 
@@ -38,9 +53,20 @@ defmodule Token do
     Conn.send_resp(conn, 404, "Unknown resource")
   end
 
+  defp set_token(user_id) do
+    token = create_token()
+    case Sider.set(:token_cache, token, user_id, @thirty_minutes) do
+      :ok -> {:ok, token}
+      {:error, :max_capacity} -> {:error, Errors.reason(:cache_full)}
+    end
+  end
 
-  defp get_value(%{"v" => value}), do: {:ok, value}
-  defp get_value(_params), do: {:error, :missing_v_param}
+  defp get_user_id(token) do
+    case Sider.get(:token_cache, token) do
+      {:ok, user_id} -> {:ok, user_id}
+      {:error, :missing_key} -> {:error, Errors.reason(:item_not_found), %{message: "token not found"}}
+    end
+  end
 
   defp create_token() do
     prefix = System.unique_integer([:positive])
