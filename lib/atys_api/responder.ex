@@ -3,15 +3,6 @@ defmodule AtysApi.Responder do
   require AtysApi.Errors
   alias AtysApi.Errors
 
-  defmacro json_plug() do
-    quote do
-      plug(Plug.Parsers,
-        parsers: [:urlencoded, :json],
-        json_decoder: Jason
-      )
-    end
-  end
-
   def handle_error(conn, error, opts \\ []) do
     send_response = Keyword.get(opts, :send_response, false)
 
@@ -32,7 +23,7 @@ defmodule AtysApi.Responder do
       }
     },
     "required" => ["request_id"]
-  }
+  } |> ExJsonSchema.Schema.resolve()
 
   def get_values(%Conn{method: "GET"} = conn, schema) do
     with conn <- Conn.fetch_query_params(conn, length: 10_000),

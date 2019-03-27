@@ -7,7 +7,7 @@ defmodule ResponderTest do
       require AtysApi.Responder
       use Plug.Builder
 
-      AtysApi.Responder.json_plug()
+      plug(AtysApi.PlugJson)
       plug(:route)
 
       def route(conn, _opts) do
