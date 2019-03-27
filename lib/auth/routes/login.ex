@@ -1,6 +1,8 @@
 defmodule Auth.Routes.Login do
+  require AtysApi.Errors
   alias Plug.Conn
   alias Auth.User
+  alias AtysApi.{Error, Errors, Response, Token}
   alias Atys.Plugs.SideUnchanneler
   use Plug.Builder
 
@@ -20,7 +22,7 @@ defmodule Auth.Routes.Login do
       {:error, :email_not_found} -> Conn.resp(conn, 403, "Invalid email or password")
       {:error, :invalid_password} -> Conn.resp(conn, 403, "Invalid email or password")
       {:error, :email_not_confirmed} -> Conn.resp(conn, 403, "Email not confirmed")
-      {:error, :token_unavailable_failure} -> Conn.resp(conn, 503, "Server Unavailable")
+      {:error, :token_cache_full} -> Conn.resp(conn, 503, "Server Unavailable")
       {:error, :token_server_failure} -> Conn.resp(conn, 500, "Internal error")
       {:error, _error} -> Conn.resp(conn, 500, "Internal error")
     end
@@ -32,19 +34,13 @@ defmodule Auth.Routes.Login do
   defp validate_confirmed(_user), do: {:error, :email_not_confirmed}
 
   defp get_login_token(%User{id: id}) do
-    token_url = Application.get_env(:auth, :token_url)
-
-    headers = [
-      {"Authorization", Application.get_env(:auth, :token_auth_header)},
-      {"Content-Type", "application/x-www-form-urlencoded"}
-    ]
-
-    body = "v=" <> URI.encode_www_form("#{id}")
-
-    case Mojito.request(:post, token_url, headers, body) do
-      {:ok, %Mojito.Response{status_code: 200, body: token}} -> {:ok, token}
-      {:ok, _response} -> {:error, :token_server_failure}
-      {:error, _error} -> {:error, :token_unavailable_failure}
+    auth_header = Application.get_env(:auth, :token_auth_header)
+    request_id = 1
+    Token.create_token(%{auth_header: auth_header, request_id: request_id, user_id: id})
+    |> case do
+      {:ok, %Response{data: %{"token" => token}}} -> {:ok, token}
+      {:error, %Error{reason: Errors.reason(:cache_full), expected: true}} -> {:error, :token_cache_full}
+      {:error, %Error{expected: false, reason: reason}} -> {:error, :token_server_failure}
     end
   end
 

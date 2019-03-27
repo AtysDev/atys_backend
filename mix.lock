@@ -1,5 +1,6 @@
 %{
   "atys": {:git, "git@github.com:AtysDev/atys.git", "b86d57e90e93ca3adc36816c0c81c367bcbd8ae3", [branch: "master"]},
+  "atys_api": {:git, "git@github.com:AtysDev/atys_api.git", "095a7acea6cd20eecc265623cbb64a4108325769", [branch: "master"]},
   "base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], [], "hexpm"},
   "castore": {:hex, :castore, "0.1.1", "a8905530209152ddb74989fa2a5bd4fa3a2d3ff5d15ad12578caa7460d807c8b", [:mix], [], "hexpm"},
   "comeonin": {:hex, :comeonin, "5.1.1", "0abd6bae41acc01c369bb3eafe46399f301bf4e1bacebafdb89252bbb8a1a32d", [:mix], [], "hexpm"},
@@ -9,6 +10,7 @@
   "cowlib": {:hex, :cowlib, "2.7.0", "3ef16e77562f9855a2605900cedb15c1462d76fb1be6a32fc3ae91973ee543d2", [:rebar3], [], "hexpm"},
   "db_connection": {:hex, :db_connection, "2.0.6", "bde2f85d047969c5b5800cb8f4b3ed6316c8cb11487afedac4aa5f93fd39abfa", [:mix], [{:connection, "~> 1.0.2", [hex: :connection, repo: "hexpm", optional: false]}], "hexpm"},
   "decimal": {:hex, :decimal, "1.7.0", "30d6b52c88541f9a66637359ddf85016df9eb266170d53105f02e4a67e00c5aa", [:mix], [], "hexpm"},
+  "ex_json_schema": {:hex, :ex_json_schema, "0.5.8", "9758444f560ebf5e1c5cb37d41a122707939f75136c7a79c4ff4ca6ad5283fb9", [:mix], [], "hexpm"},
   "fuzzyurl": {:hex, :fuzzyurl, "1.0.1", "389780519adccfc3582ecce8c6608c1619f029367abfdc9d4b6e46491d2fa8d5", [:mix], [], "hexpm"},
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
   "jose": {:hex, :jose, "1.9.0", "4167c5f6d06ffaebffd15cdb8da61a108445ef5e85ab8f5a7ad926fdf3ada154", [:mix, :rebar3], [{:base64url, "~> 0.0.1", [hex: :base64url, repo: "hexpm", optional: false]}], "hexpm"},
