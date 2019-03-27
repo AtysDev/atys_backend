@@ -28,13 +28,14 @@ defmodule AtysApi.Responder do
   def get_values(%Conn{method: "GET"} = conn, schema) do
     with conn <- Conn.fetch_query_params(conn, length: 10_000),
          {:ok, request} <- get_json_from_query(conn),
-         {:ok, values} <- extract_json(request, schema) do
+         {:ok, decoded} <- decode(request),
+         {:ok, values} <- verify_request(decoded, schema) do
       {:ok, conn, values}
     end
   end
 
   def get_values(conn, schema) do
-    with {:ok, values} <- extract_json(conn.body_params, schema) do
+    with {:ok, values} <- verify_request(conn.body_params, schema) do
       {:ok, conn, values}
     end
   end
@@ -77,8 +78,8 @@ defmodule AtysApi.Responder do
 
   defp maybe_send_response(conn, false), do: conn
 
-  defp extract_json(json, schema) do
-    with {:ok, meta, data} <- decode(json),
+  defp verify_request(decoded, schema) do
+    with {:ok, meta, data} <- get_meta_and_data(decoded),
          :ok <- validate_to_schema(meta, @meta_schema),
          :ok <- validate_to_schema(data, schema) do
       {:ok, %{meta: meta, data: data}}
@@ -88,10 +89,12 @@ defmodule AtysApi.Responder do
   defp get_json_from_query(%Conn{query_params: %{"r" => request}}), do: {:ok, request}
   defp get_json_from_query(_conn), do: {:error, Errors.reason(:invalid_param), %{missing_field: "r"}}
 
+  defp get_meta_and_data(%{"meta" => %{} = meta, "data" => %{} = data}), do: {:ok, meta, data}
+  defp get_meta_and_data(_request), do: {:error, Errors.reason(:cannot_decode_request)}
+
   defp decode(request) do
     case Jason.decode(request) do
-      {:ok, %{"meta" => %{} = meta, "data" => %{} = data}} -> {:ok, meta, data}
-      {:ok, _} -> {:error, Errors.reason(:cannot_decode_request)}
+      {:ok, response} -> {:ok, response}
       {:error, _error} -> {:error, Errors.reason(:cannot_decode_request)}
     end
   end

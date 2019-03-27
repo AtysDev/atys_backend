@@ -1,4 +1,6 @@
 defmodule AtysApi.Request do
+
+  @derive Jason.Encoder
   defstruct meta: {}, data: {}
 
   require AtysApi.Errors
