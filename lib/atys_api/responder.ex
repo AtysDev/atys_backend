@@ -31,7 +31,7 @@ defmodule AtysApi.Responder do
                }
                |> ExJsonSchema.Schema.resolve()
 
-  def get_values(%Conn{method: "GET"} = conn, schema) do
+  def get_values(%Conn{method: "GET"} = conn, %ExJsonSchema.Schema.Root{} = schema) do
     with conn <- Conn.fetch_query_params(conn, length: 10_000),
          {:ok, request} <- get_json_from_query(conn),
          {:ok, decoded} <- decode(request),
