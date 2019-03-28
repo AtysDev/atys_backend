@@ -31,17 +31,18 @@ defmodule AtysApi.Responder do
                }
                |> ExJsonSchema.Schema.resolve()
 
-  def get_values(%Conn{method: "GET"} = conn, %ExJsonSchema.Schema.Root{} = schema) do
+  def get_values(conn, schema), do: get_values(conn, schema, [])
+  def get_values(%Conn{method: "GET"} = conn, %ExJsonSchema.Schema.Root{} = schema, opts) do
     with conn <- Conn.fetch_query_params(conn, length: 10_000),
          {:ok, request} <- get_json_from_query(conn),
          {:ok, decoded} <- decode(request),
-         {:ok, values} <- verify_request(decoded, schema) do
+         {:ok, values} <- verify_request(decoded, schema, opts) do
       {:ok, conn, values}
     end
   end
 
-  def get_values(conn, schema) do
-    with {:ok, values} <- verify_request(conn.body_params, schema) do
+  def get_values(conn,  %ExJsonSchema.Schema.Root{} = schema, opts) do
+    with {:ok, values} <- verify_request(conn.body_params, schema, opts) do
       {:ok, conn, values}
     end
   end
@@ -84,8 +85,23 @@ defmodule AtysApi.Responder do
 
   defp maybe_send_response(conn, false), do: conn
 
-  defp verify_request(decoded, schema) do
-    with {:ok, meta, data} <- get_meta_and_data(decoded),
+  defp verify_request(decoded, schema, opts) do
+    case Keyword.get(opts, :frontend_request, false) do
+      true -> verify_frontend_request(decoded, schema)
+      false -> verify_backend_request(decoded, schema)
+    end
+  end
+
+  def verify_frontend_request(decoded, schema) do
+    with {:ok, data} <- get_data(decoded),
+         :ok <- validate_to_schema(data, schema) do
+      {:ok, %{data: data}}
+    end
+  end
+
+  def verify_backend_request(decoded, schema) do
+    with {:ok, meta} <- get_meta(decoded),
+         {:ok, data} <- get_data(decoded),
          :ok <- validate_to_schema(meta, @meta_schema),
          :ok <- validate_to_schema(data, schema) do
       {:ok, %{meta: meta, data: data}}
@@ -97,8 +113,12 @@ defmodule AtysApi.Responder do
   defp get_json_from_query(_conn),
     do: {:error, Errors.reason(:invalid_param), %{missing_field: "r"}}
 
-  defp get_meta_and_data(%{"meta" => %{} = meta, "data" => %{} = data}), do: {:ok, meta, data}
-  defp get_meta_and_data(_request), do: {:error, Errors.reason(:cannot_decode_request)}
+
+  defp get_meta(%{"meta" => %{} = meta}), do: {:ok, meta}
+  defp get_meta(_), do: {:error, Errors.reason(:cannot_decode_request)}
+
+  defp get_data(%{"data" => %{} = data}), do: {:ok, data}
+  defp get_data(_), do: {:error, Errors.reason(:cannot_decode_request)}
 
   defp decode(request) do
     case Jason.decode(request) do
@@ -107,10 +127,11 @@ defmodule AtysApi.Responder do
     end
   end
 
-  defp validate_to_schema(data, schema) do
+  @spec validate_to_schema(map(), ExJsonSchema.Schema.Root.t) :: :ok | {:errors, atom(), map()}
+  defp validate_to_schema(%{} = data, %ExJsonSchema.Schema.Root{} = schema) do
     case ExJsonSchema.Validator.validate(schema, data) do
       :ok -> :ok
-      {:error, errors} -> {:error, Errors.reason(:invalid_param), errors}
+      {:error, errors} -> {:error, Errors.reason(:invalid_param), %{keys: errors}}
     end
   end
 end

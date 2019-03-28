@@ -19,7 +19,7 @@ defmodule ResponderTest do
             }
           },
           "required" => ["user_id"]
-        }
+        } |> ExJsonSchema.Schema.resolve()
 
         with {:ok, conn, values} <- AtysApi.Responder.get_values(conn, schema) do
           %{data: %{"user_id" => user_id}} = values
