@@ -7,7 +7,7 @@ defmodule Token do
 
   @thirty_minutes 30 * 60 * 1000
 
-  plug PlugMachineToken, get_issuer_secret: &MachineSecretStore.get/1
+  plug PlugMachineToken, issuer: MachineSecretStore
   plug AtysApi.PlugJson
   plug :route
 
