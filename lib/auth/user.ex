@@ -38,10 +38,10 @@ defmodule Auth.User do
        %Postgrex.Error{
          postgres: %{code: :unique_violation, constraint: "users_normalized_email_key"}
        }} ->
-        {:error, :email_already_exists}
+        {:error, Errors.reason(:item_already_exists)}
 
       {:error, error} ->
-        {:error, error}
+        {:error, Errors.reason(:unexpected)}
     end
   end
 
