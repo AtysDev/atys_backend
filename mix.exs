@@ -23,7 +23,7 @@ defmodule Token.MixProject do
       {:atys_api, git: "git@github.com:AtysDev/atys_api.git", branch: "master", env: Mix.env()},
       {:jason, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
-      {:plug_machine_token, git: "git@github.com:AtysDev/plug_machine_token.git", branch: "master"},
+      {:plug_machine_token, git: "git@github.com:AtysDev/plug_machine_token.git", branch: "master", env: Mix.env()},
       {:sider, "~> 0.1.0"}
     ]
   end
