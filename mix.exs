@@ -24,6 +24,7 @@ defmodule AtysApi.MixProject do
     [
       {:ex_json_schema, "~> 0.5.8"},
       {:jason, "~> 1.1"},
+      {:mint, git: "git@github.com:ericmj/mint.git", branch: "master", override: true},
       {:mojito, "~> 0.1.0"},
       {:plug_cowboy, "~> 2.0"}
     ]
