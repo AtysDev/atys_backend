@@ -7,6 +7,9 @@ defmodule AtysApi.Responder do
     send_response = Keyword.get(opts, :send_response, false)
 
     case error do
+      {:error, %AtysApi.Error{reason: reason}} ->
+        AtysApi.Responder.error(conn, reason, send_response: send_response)
+
       {:error, error} ->
         AtysApi.Responder.error(conn, error, send_response: send_response)
 
