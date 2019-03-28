@@ -4,25 +4,45 @@ defmodule PlugMachineToken do
   import Plug.Conn
   require Errors
 
-  @type issuer_callback ::
-          (String.t() -> {:ok, String.t()} | {:error, atom})
+  defmodule Issuer do
+    @callback get_secret(Plug.Conn.t(), String.t()) :: {:ok, String.t()} | {:error, atom()}
+
+    @type route :: :wildcard | String.t()
+    def is_allowed?(%Plug.Conn{method: method, path_info: conn_path}, permitted_routes \\ []) do
+      Enum.any?(permitted_routes, fn {^method, allowed_path} ->
+        route_matches?(conn_path: conn_path, allowed_path: allowed_path)
+        _ -> false
+      end)
+    end
+
+
+    defp route_matches?(conn_path: conn_path, allowed_path: allowed_path) when length(conn_path) != length(allowed_path), do: false
+    defp route_matches?(conn_path: conn_path, allowed_path: allowed_path) do
+      Enum.zip(conn_path, allowed_path)
+      |> Enum.all?(fn
+        {a, b} when a == b -> true
+        {_a, :wildcard} -> true
+        _ -> false
+      end)
+    end
+  end
 
   @jws JWS.from_map({%{alg: :jose_jws_alg_hmac}, %{"alg" => "HS256", "typ" => "JWT"}})
   @algorithms ["HS256"]
 
-  @spec init(keyword()) :: %{get_issuer_secret_fn: issuer_callback}
+  @spec init(keyword()) :: %{issuer: module()}
   def init(options) do
-    callback = Keyword.fetch!(options, :get_issuer_secret)
-    %{get_issuer_secret_fn: callback}
+    callback = Keyword.fetch!(options, :issuer)
+    %{issuer: callback}
   end
 
-  def call(conn, %{get_issuer_secret_fn: get_issuer_secret_fn}) do
+  def call(conn, %{issuer: issuer}) do
     with {:ok, auth_header} <- get_authorization(conn),
-         {:ok, issuer} <- get_unverified_issuer(auth_header),
-         {:ok, issuer_secret} <- get_issuer_secret(get_issuer_secret_fn, issuer),
+         {:ok, issuer_name} <- get_unverified_issuer(auth_header),
+         {:ok, issuer_secret} <- get_issuer_secret(conn, issuer, issuer_name),
          :ok <- validate_issuer_secret(issuer_secret),
          jwk <- JWK.from_oct(issuer_secret),
-         {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
+         {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer_name) do
       conn
     else
       error -> Responder.handle_error(conn, error, send_response: true) |> halt()
@@ -61,8 +81,8 @@ defmodule PlugMachineToken do
     end
   end
 
-  defp get_issuer_secret(get_issuer_secret_fn, issuer) do
-    case get_issuer_secret_fn.(issuer) do
+  defp get_issuer_secret(conn, issuer_mod, issuer_name) do
+    case apply(issuer_mod, :get_secret, [conn, issuer_name]) do
       {:ok, secret} -> {:ok, secret}
       {:error, error} -> unauthorized(error)
       _ -> unauthorized(:invalid_issuer_callback_response)
