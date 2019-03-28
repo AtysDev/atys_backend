@@ -6,6 +6,7 @@ defmodule AtysApi.Errors do
     unauthorized: 403,
     email_not_confirmed: 403,
     item_not_found: 404,
+    unexpected: 500,
     cannot_decode_response: 500,
     cannot_contact_server: 503,
     cache_full: 503

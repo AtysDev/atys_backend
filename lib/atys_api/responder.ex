@@ -3,6 +3,8 @@ defmodule AtysApi.Responder do
   require AtysApi.Errors
   alias AtysApi.Errors
 
+  @spec handle_error(Plug.Conn.t(), {:error, %AtysApi.Error{} | atom} | {:error, atom, %{}}, keyword()) ::
+          Plug.Conn.t()
   def handle_error(conn, error, opts \\ []) do
     send_response = Keyword.get(opts, :send_response, false)
 
