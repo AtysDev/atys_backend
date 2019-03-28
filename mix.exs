@@ -19,6 +19,7 @@ defmodule PlugMachineToken.MixProject do
 
   defp deps do
     [
+      {:atys_api, git: "git@github.com:AtysDev/atys_api.git", branch: "master", env: Mix.env()},
       {:jason, "~> 1.1"},
       {:jose, "~> 1.9"},
       {:plug_cowboy, "~> 2.0"}

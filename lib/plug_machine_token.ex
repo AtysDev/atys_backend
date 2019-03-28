@@ -1,9 +1,11 @@
 defmodule PlugMachineToken do
   alias JOSE.{JWK, JWS, JWT}
+  alias AtysApi.{Errors, Responder}
   import Plug.Conn
+  require Errors
 
   @type issuer_callback ::
-          (String.t() -> {:ok, String.t()} | {:error, atom} | {:error, String.t()})
+          (String.t() -> {:ok, String.t()} | {:error, atom})
 
   @jws JWS.from_map({%{alg: :jose_jws_alg_hmac}, %{"alg" => "HS256", "typ" => "JWT"}})
   @algorithms ["HS256"]
@@ -23,9 +25,7 @@ defmodule PlugMachineToken do
          {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
       conn
     else
-      {:error, :invalid_issuer_secret} -> send_resp(conn, 500, "invalid_issuer_secret") |> halt()
-      {:error, :invalid_issuer_callback_response} -> send_resp(conn, 500, "invalid_issuer_callback_response") |> halt()
-      {:error, error} -> send_resp(conn, 403, Atom.to_string(error)) |> halt()
+      error -> Responder.handle_error(conn, error, send_response: true) |> halt()
     end
   end
 
@@ -44,9 +44,9 @@ defmodule PlugMachineToken do
     # https://github.com/ninenines/cowboy/blob/master/doc/src/manual/cowboy_req.headers.asciidoc
     case get_req_header(conn, "authorization") do
       ["Bearer " <> value] -> {:ok, value}
-      [_value] -> {:error, :authorization_header_not_bearer}
-      [_value | _values] -> {:error, :too_many_authorization_headers}
-      _ -> {:error, :missing_authorization_header}
+      [_value] -> unauthorized(:authorization_header_not_bearer)
+      [_value | _values] -> unauthorized(:too_many_authorization_headers)
+      _ -> unauthorized(:missing_authorization_header)
     end
   end
 
@@ -54,29 +54,29 @@ defmodule PlugMachineToken do
     try do
       case JWT.peek(auth_header) do
         %JWT{fields: %{"iss" => issuer}} -> {:ok, issuer}
-        _ -> {:error, :invalid_authorization_header}
+        _ -> unauthorized(:invalid_authorization_header)
       end
     rescue
-      _e -> {:error, :invalid_authorization_header}
+      _e -> unauthorized(:invalid_authorization_header)
     end
   end
 
   defp get_issuer_secret(get_issuer_secret_fn, issuer) do
     case get_issuer_secret_fn.(issuer) do
       {:ok, secret} -> {:ok, secret}
-      {:error, error} -> {:error, error}
-      _ -> {:error, :invalid_issuer_callback_response}
+      {:error, error} -> unauthorized(error)
+      _ -> unauthorized(:invalid_issuer_callback_response)
     end
   end
 
   defp validate_issuer_secret(<<_rest::size(256)>>), do: :ok
-  defp validate_issuer_secret(_), do: {:error, :invalid_issuer_secret}
+  defp validate_issuer_secret(_), do: unauthorized(:invalid_issuer_secret)
 
   defp validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
     case JWT.verify_strict(jwk, @algorithms, auth_header) do
       {true, %JWT{fields: %{"iss" => ^issuer, "exp" => _exp}} = jwt, @jws} -> validate_expiration(jwt)
       {true, %JWT{fields: %{"iss" => ^issuer}} = jwt, @jws} -> {:ok, jwt}
-      _ -> {:error, :bad_signature}
+      _ -> unauthorized(:bad_signature)
     end
   end
 
@@ -85,7 +85,7 @@ defmodule PlugMachineToken do
     :lt <- DateTime.compare(DateTime.utc_now(), expires_at) do
       {:ok, jwt}
     else
-      _ -> {:error, :bad_signature}
+      _ -> unauthorized(:bad_signature)
     end
   end
 
@@ -99,4 +99,6 @@ defmodule PlugMachineToken do
 
     "Bearer " <> jwt
   end
+
+  defp unauthorized(details), do: {:error, Errors.reason(:unauthorized), %{details: details}}
 end

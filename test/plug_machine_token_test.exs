@@ -23,7 +23,7 @@ defmodule PlugMachineTokenTest do
 
   test "halts if the authorization is missing" do
     conn = conn(:get, "/") |> call_plug(&key_callback/1)
-    assert_halted(conn, "missing_authorization_header")
+    assert_resp(conn, "missing_authorization_header")
   end
 
   test "halts if multiple authorization headers" do
@@ -35,7 +35,7 @@ defmodule PlugMachineTokenTest do
       %Conn{conn | req_headers: req_headers}
       |> call_plug(&key_callback/1)
 
-    assert_halted(conn, "too_many_authorization_headers")
+    assert_resp(conn, "too_many_authorization_headers")
   end
 
   test "halts if basic auth is used" do
@@ -43,7 +43,7 @@ defmodule PlugMachineTokenTest do
       create_conn("Basic 123")
       |> call_plug(&key_callback/1)
 
-    assert_halted(conn, "authorization_header_not_bearer")
+    assert_resp(conn, "authorization_header_not_bearer")
   end
 
   test "halts if the authorization is not a JWT header" do
@@ -51,7 +51,7 @@ defmodule PlugMachineTokenTest do
       create_conn("Bearer not_a_jwt")
       |> call_plug(&key_callback/1)
 
-    assert_halted(conn, "invalid_authorization_header")
+    assert_resp(conn, "invalid_authorization_header")
   end
 
   test "halts if the authorization is missing the issuer field" do
@@ -69,7 +69,7 @@ defmodule PlugMachineTokenTest do
       create_conn(token)
       |> call_plug(&key_callback/1)
 
-    assert_halted(conn, "invalid_authorization_header")
+    assert_resp(conn, "invalid_authorization_header")
   end
 
   test "halts if the issuer_secret cannot be found" do
@@ -79,7 +79,7 @@ defmodule PlugMachineTokenTest do
       create_conn(@header)
       |> call_plug(callback)
 
-    assert_halted(conn, "not_found")
+    assert_resp(conn, "not_found")
   end
 
   test "halt if the issuer_secret isn't 256 bits" do
@@ -89,18 +89,14 @@ defmodule PlugMachineTokenTest do
       create_conn(@header)
       |> call_plug(callback)
 
-    assert 500 = conn.status
-    assert "invalid_issuer_secret" = conn.resp_body
-    assert true = conn.halted
+    assert_resp(conn, "invalid_issuer_secret")
   end
 
   test "halts if the callback doesn't return the correct signature" do
     callback = fn _ -> @key end
     conn = create_conn(@header)
       |> call_plug(callback)
-    assert 500 = conn.status
-    assert "invalid_issuer_callback_response" = conn.resp_body
-    assert true = conn.halted
+    assert_resp(conn, "invalid_issuer_callback_response")
   end
 
   test "halts if the signature is invalid" do
@@ -108,7 +104,7 @@ defmodule PlugMachineTokenTest do
     callback = fn "my_service" -> {:ok, wrong_key} end
     conn = create_conn(@header)
       |> call_plug(callback)
-    assert_halted(conn, "bad_signature")
+    assert_resp(conn, "bad_signature")
   end
 
   test "halts if the machine token has expired" do
@@ -119,7 +115,7 @@ defmodule PlugMachineTokenTest do
 
     conn = create_conn(auth_header)
       |> call_plug(&key_callback/1)
-    assert_halted(conn, "bad_signature")
+    assert_resp(conn, "bad_signature")
   end
 
   defp create_conn(auth_header) do
@@ -132,9 +128,9 @@ defmodule PlugMachineTokenTest do
     PlugMachineToken.call(conn, opts)
   end
 
-  defp assert_halted(conn, status) do
+  defp assert_resp(conn, details) do
     assert 403 = conn.status
-    assert ^status = conn.resp_body
+    assert %{"reason" => "unauthorized", "data" => %{"details" => ^details}} = Jason.decode!(conn.resp_body)
     assert true = conn.halted
   end
 end
