@@ -2,7 +2,7 @@ defmodule Token do
   alias AtysApi.{Errors, Responder}
   alias Plug.Conn
   alias Token.MachineSecretStore
-  require AtysApi.Errors
+  require Errors
   use Plug.Builder
 
   @thirty_minutes 30 * 60 * 1000
