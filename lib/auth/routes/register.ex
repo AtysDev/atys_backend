@@ -27,7 +27,7 @@ defmodule Auth.Routes.Register do
 
   def create(%Conn{path_info: ["register"], method: "POST"} = conn, _opts) do
     with {:ok, conn, %{data: %{"email" => email, "password" => password}}} <-
-           Responder.get_values(conn, @register_schema),
+           Responder.get_values(conn, @register_schema, frontend_request: true),
          :ok <- create_and_send_email(email: email, password: password) do
       Responder.respond(conn)
     else

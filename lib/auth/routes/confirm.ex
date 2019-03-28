@@ -23,7 +23,7 @@ defmodule Auth.Routes.Confirm do
 
   def create(%Conn{path_info: ["confirm"], method: "POST"} = conn, _opts) do
     with {:ok, conn, %{data: %{"token" => token}}} <-
-           Responder.get_values(conn, @confirm_schema),
+           Responder.get_values(conn, @confirm_schema, frontend_request: true),
          {:ok, id} <- validate_token(token),
          :ok <- User.confirm_email(id) do
       Responder.respond(conn)

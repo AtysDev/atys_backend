@@ -42,7 +42,7 @@ defmodule Auth.Routes.Password do
 
   def start_reset(%Conn{path_info: ["password", "reset"], method: "GET"} = conn, _opts) do
     with {:ok, conn, %{data: %{"email" => email}}} <-
-           Responder.get_values(conn, @start_reset_schema),
+           Responder.get_values(conn, @start_reset_schema, frontend_request: true),
          :ok <- send_reset_email_if_valid(email) do
       Responder.respond(conn)
     else
@@ -54,7 +54,7 @@ defmodule Auth.Routes.Password do
 
   def reset(%Conn{path_info: ["password", "reset"], method: "POST"} = conn, _opts) do
     with {:ok, conn, %{data: %{"token" => token, "password" => new_password}}} <-
-           Responder.get_values(conn, @reset_schema),
+           Responder.get_values(conn, @reset_schema, frontend_request: true),
          {:ok, id} <- validate_token(token),
          :ok <- User.update_password(id, new_password) do
       Sider.remove(:email_tokens, token)

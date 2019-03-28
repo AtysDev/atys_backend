@@ -1,5 +1,5 @@
 defmodule Auth.Routes.Login do
-  alias AtysApi.{Errors, Responder, Token}
+  alias AtysApi.{Errors, Response, Responder, Token}
   alias Plug.Conn
   alias Auth.User
   alias Atys.Plugs.SideUnchanneler
@@ -26,9 +26,9 @@ defmodule Auth.Routes.Login do
 
   def create(%Conn{path_info: ["login"], method: "POST"} = conn, _opts) do
     with {:ok, conn, %{data: %{"email" => email, "password" => password}}} <-
-           Responder.get_values(conn, @login_schema),
+           Responder.get_values(conn, @login_schema, frontend_request: true),
          {:ok, user} <- get_valid_user(email: email, password: password),
-         {:ok, token} <- get_login_token(conn, user) do
+         {:ok, %Response{data: %{"token" => token}}} <- get_login_token(conn, user) do
       Responder.respond(conn, data: %{token: token})
     else
       error -> Responder.handle_error(conn, error)
