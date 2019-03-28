@@ -11,14 +11,15 @@ defmodule Auth.Routes.Confirm do
   plug(SideUnchanneler, execute: true)
 
   @confirm_schema %{
-    "type" => "object",
-    "properties" => %{
-      "token" => %{
-        "type" => "string"
-      }
-    },
-    "required" => ["token"]
-  }
+                    "type" => "object",
+                    "properties" => %{
+                      "token" => %{
+                        "type" => "string"
+                      }
+                    },
+                    "required" => ["token"]
+                  }
+                  |> ExJsonSchema.Schema.resolve()
 
   def create(%Conn{path_info: ["confirm"], method: "POST"} = conn, _opts) do
     with {:ok, conn, %{data: %{"token" => token}}} <-

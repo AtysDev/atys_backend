@@ -3,7 +3,9 @@ defmodule Auth.Routes.Password do
   alias Auth.Email
   alias Auth.User
   alias Atys.Plugs.SideUnchanneler
+  alias AtysApi.{Errors, Responder}
   use Plug.Builder
+  require Errors
 
   plug(SideUnchanneler, send_after_ms: 50)
   plug(:start_reset)
@@ -13,28 +15,52 @@ defmodule Auth.Routes.Password do
   plug(:reset)
   plug(SideUnchanneler, execute: true)
 
+  @start_reset_schema %{
+                        "type" => "object",
+                        "properties" => %{
+                          "email" => %{
+                            "type" => "string"
+                          }
+                        },
+                        "required" => ["email"]
+                      }
+                      |> ExJsonSchema.Schema.resolve()
+
+  @reset_schema %{
+                  "type" => "object",
+                  "properties" => %{
+                    "token" => %{
+                      "type" => "string"
+                    },
+                    "password" => %{
+                      "type" => "string"
+                    }
+                  },
+                  "required" => ["token", "password"]
+                }
+                |> ExJsonSchema.Schema.resolve()
+
   def start_reset(%Conn{path_info: ["password", "reset"], method: "GET"} = conn, _opts) do
-    with {:ok, email} <- get_email(conn.query_params),
+    with {:ok, conn, %{data: %{"email" => email}}} <-
+           Responder.get_values(conn, @start_reset_schema),
          :ok <- send_reset_email_if_valid(email) do
-      Conn.resp(conn, 200, "check_email")
+      Responder.respond(conn)
     else
-      {:error, :missing_email} -> Conn.resp(conn, 400, "Missing email or password")
-      {:error, _error} -> Conn.resp(conn, 500, "Internal error")
+      error -> Responder.handle_error(conn, error)
     end
   end
 
   def start_reset(conn, _opts), do: conn
 
   def reset(%Conn{path_info: ["password", "reset"], method: "POST"} = conn, _opts) do
-    with {:ok, {token, new_password}} <- get_values(conn.body_params),
+    with {:ok, conn, %{data: %{"token" => token, "password" => new_password}}} <-
+           Responder.get_values(conn, @reset_schema),
          {:ok, id} <- validate_token(token),
          :ok <- User.update_password(id, new_password) do
       Sider.remove(:email_tokens, token)
-      Conn.resp(conn, 200, "password reset")
+      Responder.respond(conn)
     else
-      {:error, :missing_token_or_password} -> Conn.resp(conn, 400, "Missing token or password")
-      {:error, :invalid_token} -> Conn.resp(conn, 403, "invalid token")
-      {:error, _error} -> Conn.resp(conn, 500, "Internal error")
+      error -> Responder.handle_error(conn, error)
     end
   end
 
@@ -50,16 +76,7 @@ defmodule Auth.Routes.Password do
   defp validate_token(token) do
     case Sider.get(:email_tokens, token) do
       {:ok, id} -> {:ok, id}
-      {:error, :missing_key} -> {:error, :invalid_token}
+      {:error, :missing_key} -> {:error, Errors.reason(:unauthorized)}
     end
   end
-
-  defp get_email(%{"email" => email}), do: {:ok, email}
-  defp get_email(_), do: {:error, :missing_email}
-
-  defp get_values(%{"token" => token, "password" => password}) do
-    {:ok, {token, password}}
-  end
-
-  defp get_values(_), do: {:error, :missing_token_or_password}
 end
