@@ -15,7 +15,7 @@ defmodule AtysApi.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      env: AtysApi.Environment.get(Mix.env()),
+      env: AtysApi.Environment.get(Mix.env())
     ]
   end
 

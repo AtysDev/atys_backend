@@ -26,11 +26,10 @@ defmodule AtysApi.Environment do
   def get(_any) do
     Enum.map(@services, fn {name, port} ->
       env_name =
-      "#{Atom.to_string(name)}_url"
-      |> String.to_atom()
+        "#{Atom.to_string(name)}_url"
+        |> String.to_atom()
 
-    {env_name, "http://localhost:#{port}"}
+      {env_name, "http://localhost:#{port}"}
     end)
   end
-
 end
