@@ -21,5 +21,10 @@ defmodule AtysApi.Errors do
     end
   end
 
+  def unexpected(underlying_error) do
+    AtysApi.Logger.log_unexpected(underlying_error)
+    reason(:unexpected)
+  end
+
   def get_status_code(name), do: Map.fetch!(@errors, name)
 end

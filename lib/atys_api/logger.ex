@@ -13,4 +13,8 @@ defmodule AtysApi.Logger do
   def log_response(url, {:error, %Error{reason: reason} = error}) do
     Logger.error("Unexpected failure: #{reason} from #{url} with response #{inspect(error)}")
   end
+
+  def log_unexpected(underlying_error) do
+    Logger.error("Unexpected failure: #{inspect(underlying_error)}")
+  end
 end
