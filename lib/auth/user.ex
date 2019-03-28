@@ -1,4 +1,7 @@
 defmodule Auth.User do
+  alias AtysApi.Errors
+  require Errors
+
   defstruct id: nil, password_hash: nil, user_data: %{}, confirmed?: false
 
   def normalize_email(email) do
@@ -49,6 +52,7 @@ defmodule Auth.User do
 
   def update_password(id, password) do
     hashed = hash_password(password)
+
     Postgrex.query(:db, "UPDATE users set password_hash = $2 WHERE id = $1", [id, hashed])
     |> parse_update_result()
   end
@@ -56,7 +60,7 @@ defmodule Auth.User do
   def validate_password(%Auth.User{password_hash: hash}, password) do
     case Pbkdf2.verify_pass(password, hash) do
       true -> :ok
-      false -> {:error, :invalid_password}
+      false -> {:error, Errors.reason(:unauthorized)}
     end
   end
 
@@ -76,8 +80,8 @@ defmodule Auth.User do
 
       {:ok, user}
     else
-      {:ok, _result} -> {:error, :email_not_found}
-      {:error, error} -> {:error, error}
+      {:ok, _result} -> {:error, Errors.reason(:item_not_found)}
+      {:error, _error} -> {:error, Errors.reason(:cannot_contact_server)}
     end
   end
 

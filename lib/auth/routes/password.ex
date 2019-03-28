@@ -22,12 +22,13 @@ defmodule Auth.Routes.Password do
       {:error, _error} -> Conn.resp(conn, 500, "Internal error")
     end
   end
+
   def start_reset(conn, _opts), do: conn
 
   def reset(%Conn{path_info: ["password", "reset"], method: "POST"} = conn, _opts) do
     with {:ok, {token, new_password}} <- get_values(conn.body_params),
-    {:ok, id} <- validate_token(token),
-    :ok <- User.update_password(id, new_password) do
+         {:ok, id} <- validate_token(token),
+         :ok <- User.update_password(id, new_password) do
       Sider.remove(:email_tokens, token)
       Conn.resp(conn, 200, "password reset")
     else
@@ -36,6 +37,7 @@ defmodule Auth.Routes.Password do
       {:error, _error} -> Conn.resp(conn, 500, "Internal error")
     end
   end
+
   def reset(conn, _opts), do: conn
 
   defp send_reset_email_if_valid(email) do
@@ -58,5 +60,6 @@ defmodule Auth.Routes.Password do
   defp get_values(%{"token" => token, "password" => password}) do
     {:ok, {token, password}}
   end
+
   defp get_values(_), do: {:error, :missing_token_or_password}
 end

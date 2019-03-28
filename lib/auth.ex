@@ -5,6 +5,7 @@ defmodule Auth do
   use Plug.Builder
 
   plug(CORSPlug)
+  plug(Plug.RequestId)
   plug(Plug.Parsers, parsers: [:urlencoded])
   plug(Routes.Register)
   plug(Routes.Confirm)
