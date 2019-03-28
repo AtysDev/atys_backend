@@ -41,7 +41,7 @@ defmodule Auth.User do
         {:error, Errors.reason(:item_already_exists)}
 
       {:error, error} ->
-        {:error, Errors.reason(:unexpected)}
+        {:error, Errors.unexpected(error)}
     end
   end
 
@@ -88,7 +88,7 @@ defmodule Auth.User do
   defp parse_update_result(query_result) do
     case query_result do
       {:ok, %Postgrex.Result{num_rows: 1}} -> :ok
-      _ -> {:error, Errors.reason(:unexpected)}
+      {_, result} -> {:error, Errors.unexpected(result)}
     end
   end
 

@@ -1,6 +1,6 @@
 %{
   "atys": {:git, "git@github.com:AtysDev/atys.git", "b86d57e90e93ca3adc36816c0c81c367bcbd8ae3", [branch: "master"]},
-  "atys_api": {:git, "git@github.com:AtysDev/atys_api.git", "de0a211ef759cabc6e5079ee9843466241905a66", [branch: "master"]},
+  "atys_api": {:git, "git@github.com:AtysDev/atys_api.git", "2f4ece2f40c1bb8a5e2646843317241b0f1f2af1", [branch: "master"]},
   "base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], [], "hexpm"},
   "castore": {:hex, :castore, "0.1.1", "a8905530209152ddb74989fa2a5bd4fa3a2d3ff5d15ad12578caa7460d807c8b", [:mix], [], "hexpm"},
   "comeonin": {:hex, :comeonin, "5.1.1", "0abd6bae41acc01c369bb3eafe46399f301bf4e1bacebafdb89252bbb8a1a32d", [:mix], [], "hexpm"},
