@@ -90,7 +90,7 @@ defmodule AtysApi.Request do
          %AtysApi.Error{
            status_code: status_code,
            request_id: request_id,
-           reason: reason,
+           reason: Errors.reason(String.to_atom(reason)),
            data: data,
            expected: reason in expected_failures
          }}

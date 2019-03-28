@@ -13,11 +13,18 @@ defmodule AtysApi.Errors do
     cache_full: 503
   }
 
-  defmacro reason(name) do
+  defmacro reason(name) when is_atom(name) do
     Map.fetch!(@errors, name)
 
     quote do
       unquote(name)
+    end
+  end
+
+  defmacro reason(name) do
+    quote bind_quoted: [name: name] do
+      AtysApi.Errors.get_status_code(name) # Used as a side effect to validate the name
+      name
     end
   end
 

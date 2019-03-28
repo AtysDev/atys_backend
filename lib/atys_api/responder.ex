@@ -24,7 +24,7 @@ defmodule AtysApi.Responder do
                  "type" => "object",
                  "properties" => %{
                    "request_id" => %{
-                     "type" => "number"
+                     "type" => "string"
                    }
                  },
                  "required" => ["request_id"]
