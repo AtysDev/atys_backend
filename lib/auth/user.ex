@@ -88,9 +88,7 @@ defmodule Auth.User do
   defp parse_update_result(query_result) do
     case query_result do
       {:ok, %Postgrex.Result{num_rows: 1}} -> :ok
-      {:ok, %Postgrex.Result{num_rows: 0}} -> {:error, :user_id_invalid}
-      {:ok, _result} -> {:error, :unexpected_error}
-      {:error, error} -> {:error, error}
+      _ -> {:error, Errors.reason(:unexpected)}
     end
   end
 

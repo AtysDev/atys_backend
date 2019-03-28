@@ -2,22 +2,32 @@ defmodule Auth.Routes.Confirm do
   alias Plug.Conn
   alias Auth.User
   alias Atys.Plugs.SideUnchanneler
+  alias AtysApi.{Errors, Responder}
   use Plug.Builder
+  require Errors
 
   plug(SideUnchanneler, send_after_ms: 50)
   plug(:create)
   plug(SideUnchanneler, execute: true)
 
+  @confirm_schema %{
+    "type" => "object",
+    "properties" => %{
+      "token" => %{
+        "type" => "string"
+      }
+    },
+    "required" => ["token"]
+  }
+
   def create(%Conn{path_info: ["confirm"], method: "POST"} = conn, _opts) do
-    with {:ok, token} <- get_token(conn.body_params),
+    with {:ok, conn, %{data: %{"token" => token}}} <-
+           Responder.get_values(conn, @confirm_schema),
          {:ok, id} <- validate_token(token),
          :ok <- User.confirm_email(id) do
-      Sider.remove(:email_tokens, token)
-      Conn.resp(conn, 200, "email confirmed")
+      Responder.respond(conn)
     else
-      {:error, :missing_token} -> Conn.resp(conn, 400, "missing token")
-      {:error, :invalid_token} -> Conn.resp(conn, 403, "invalid token")
-      {:error, _error} -> Conn.resp(conn, 500, "Internal error")
+      error -> Responder.handle_error(conn, error)
     end
   end
 
@@ -26,10 +36,7 @@ defmodule Auth.Routes.Confirm do
   defp validate_token(token) do
     case Sider.get(:email_tokens, token) do
       {:ok, id} -> {:ok, id}
-      {:error, :missing_key} -> {:error, :invalid_token}
+      {:error, :missing_key} -> {:error, Errors.reason(:item_not_found)}
     end
   end
-
-  defp get_token(%{"token" => token}), do: {:ok, token}
-  defp get_token(_query_params), do: {:error, :missing_token}
 end
