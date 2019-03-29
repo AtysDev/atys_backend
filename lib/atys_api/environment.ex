@@ -1,7 +1,8 @@
 defmodule AtysApi.Environment do
   @services %{
     token: 4000,
-    auth: 4001
+    auth: 4001,
+    secret: 4002,
   }
 
   def get(:prod) do
