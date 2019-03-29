@@ -6,10 +6,8 @@ defmodule Secret.Application do
   use Application
 
   def start(_type, _args) do
-    # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: Secret.Worker.start_link(arg)
-      # {Secret.Worker, arg}
+      {Secret.Repo, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
