@@ -7,7 +7,8 @@ defmodule Secret.Application do
 
   def start(_type, _args) do
     children = [
-      {Secret.Repo, []}
+      {Secret.Repo, []},
+      Plug.Cowboy.child_spec(scheme: :http, plug: Secret, options: [port: 4002])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

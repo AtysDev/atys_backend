@@ -2,8 +2,7 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-config :secret,
-  :ecto_repos, [Secret.Repo]
+config :secret, :ecto_repos, [Secret.Repo]
 
 config :secret, Secret.Repo,
   migration_timestamps: [type: :utc_datetime],
