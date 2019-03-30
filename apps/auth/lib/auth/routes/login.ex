@@ -1,5 +1,6 @@
 defmodule Auth.Routes.Login do
-  alias AtysApi.{Errors, Response, Responder, Token}
+  alias AtysApi.{Errors, Response, Responder}
+  alias AtysApi.Service.Token
   alias Plug.Conn
   alias Auth.User
   alias Atys.Plugs.SideUnchanneler
