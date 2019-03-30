@@ -5,7 +5,7 @@ defmodule Secret.MachineSecretStore do
   def get_issuers_paths() do
     %{
       "vault" => [{"GET", [:wildcard]}],
-      "project" => [{"POST", []}]
+      "project" => [{"POST", []}, {"DELETE", [:wildcard]}]
     }
   end
 

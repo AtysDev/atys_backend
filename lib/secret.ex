@@ -46,6 +46,15 @@ defmodule Secret do
     end
   end
 
+  def route(%Conn{path_info: [id], method: "DELETE"} = conn, _opts) do
+    with {:ok, conn, _} <- Responder.get_values(conn, @get_machine_key_schema),
+         :ok <- delete_machine_key(id) do
+      Responder.respond(conn, send_response: true)
+    else
+      error -> Responder.handle_error(conn, error)
+    end
+  end
+
   def route(conn, _opts) do
     Conn.send_resp(conn, 404, "Unknown resource")
   end
@@ -67,6 +76,14 @@ defmodule Secret do
     |> case do
       nil -> {:error, AtysApi.Errors.reason(:item_not_found)}
       %Secret.MachineKey{} = machine_key -> {:ok, machine_key}
+    end
+  end
+
+  defp delete_machine_key(id) do
+    case Repo.delete(%MachineKey{id: id}, stale_error_field: :errors) do
+      {:ok, %MachineKey{__meta__: %{state: :deleted}}} -> :ok
+      {:error, %Ecto.Changeset{errors: [errors: {"is stale", [stale: true]}]}} -> :ok
+      result -> {:error, AtysApi.Errors.unexpected("Deleting #{id} returned #{inspect(result)}")}
     end
   end
 end
