@@ -5,17 +5,24 @@ defmodule PlugMachineToken do
   require Errors
 
   defmodule Issuer do
-    @callback get_secret(Plug.Conn.t(), String.t()) :: {:ok, String.t()} | {:error, atom()}
+    @type path :: :wildcard | String.t()
+    @type method :: String.t()
+    @type issuer_name :: String.t()
+    @type allowed_paths :: [{method, [path]}]
+    @type issuers_paths :: %{required(issuer_name) => allowed_paths}
 
-    @type route :: :wildcard | String.t()
-    def is_allowed?(%Plug.Conn{method: method, path_info: conn_path}, permitted_routes \\ []) do
-      Enum.any?(permitted_routes, fn {^method, allowed_path} ->
+    @callback get_secret(String.t()) :: {:ok, String.t()} | {:error, atom()}
+    @callback get_issuers_paths() :: issuers_paths
+
+    @spec is_allowed?(Plug.Conn.t(), allowed_paths) :: boolean()
+    def is_allowed?(%Plug.Conn{method: method, path_info: conn_path}, allowed_paths \\ []) do
+      Enum.any?(allowed_paths, fn {^method, allowed_path} ->
         route_matches?(conn_path: conn_path, allowed_path: allowed_path)
         _ -> false
       end)
     end
 
-
+    @spec route_matches?(conn_path: [String.t()], allowed_path: path) :: boolean
     defp route_matches?(conn_path: conn_path, allowed_path: allowed_path) when length(conn_path) != length(allowed_path), do: false
     defp route_matches?(conn_path: conn_path, allowed_path: allowed_path) do
       Enum.zip(conn_path, allowed_path)
@@ -30,16 +37,18 @@ defmodule PlugMachineToken do
   @jws JWS.from_map({%{alg: :jose_jws_alg_hmac}, %{"alg" => "HS256", "typ" => "JWT"}})
   @algorithms ["HS256"]
 
-  @spec init(keyword()) :: %{issuer: module()}
+  @spec init(keyword()) :: %{issuer: module(), issuers_paths: Issuer.issuers_paths()}
   def init(options) do
-    callback = Keyword.fetch!(options, :issuer)
-    %{issuer: callback}
+    issuer = Keyword.fetch!(options, :issuer)
+    issuers_paths = apply(issuer, :get_issuers_paths, [])
+    %{issuer: issuer, issuers_paths: issuers_paths}
   end
 
-  def call(conn, %{issuer: issuer}) do
+  def call(conn, %{issuer: issuer, issuers_paths: issuers_paths}) do
     with {:ok, auth_header} <- get_authorization(conn),
          {:ok, issuer_name} <- get_unverified_issuer(auth_header),
-         {:ok, issuer_secret} <- get_issuer_secret(conn, issuer, issuer_name),
+         :ok <- validate_issuer_path(conn, issuer_name, issuers_paths),
+         {:ok, issuer_secret} <- get_issuer_secret(issuer, issuer_name),
          :ok <- validate_issuer_secret(issuer_secret),
          jwk <- JWK.from_oct(issuer_secret),
          {:ok, _jwt} <- validate_authorization(auth_header, jwk: jwk, issuer: issuer_name) do
@@ -81,8 +90,16 @@ defmodule PlugMachineToken do
     end
   end
 
-  defp get_issuer_secret(conn, issuer_mod, issuer_name) do
-    case apply(issuer_mod, :get_secret, [conn, issuer_name]) do
+  defp validate_issuer_path(conn, issuer_name, issuers_paths) do
+    issuer_paths = Map.get(issuers_paths, issuer_name, [])
+    case PlugMachineToken.Issuer.is_allowed?(conn, issuer_paths) do
+      true -> :ok
+      false -> unauthorized(:issuer_not_authorized)
+    end
+  end
+
+  defp get_issuer_secret(issuer_mod, issuer_name) do
+    case apply(issuer_mod, :get_secret, [issuer_name]) do
       {:ok, secret} -> {:ok, secret}
       {:error, error} -> unauthorized(error)
       _ -> unauthorized(:invalid_issuer_callback_response)

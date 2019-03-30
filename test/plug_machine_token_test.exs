@@ -9,38 +9,60 @@ defmodule PlugMachineTokenTest do
   @wrong_key_header PlugMachineToken.create_machine_token(<<2::256>>, %{name: "my_service"})
   defmodule ServiceIssuer do
     @behaviour PlugMachineToken.Issuer
-    def get_secret(conn, service) do
-      key = <<1::256>>
-      other_key = <<22::256>>
-      service_routes = %{
-        "my_service" => [key: key, routes: [{"GET", []}, {"GET", ["homes", :wildcard]}, {"POST", ["homes", :wildcard, "owners"]}]],
-        "car_service" => [key: other_key, routes: [{"GET", []}, {"POST", ["cars"]}]]
+    def get_secret(service) do
+      %{
+        "my_service" => <<1::256>>,
+        "car_service" => <<22::256>>
       }
-
-      [key: key, routes: routes] = Map.get(service_routes, service, [key: nil, routes: []])
-      case PlugMachineToken.Issuer.is_allowed?(conn, routes) do
-        true -> {:ok, key}
-        false -> {:error, :not_in_service_routes}
+      |> Map.fetch(service)
+      |> case do
+        {:ok, key} -> {:ok, key}
+        :error -> {:error, :missing_key}
       end
+    end
+
+    def get_issuers_paths() do
+      %{
+        "my_service" => [{"GET", []}, {"GET", ["homes", :wildcard]}, {"POST", ["homes", :wildcard, "owners"]}],
+        "car_service" => [{"GET", []}, {"POST", ["cars"]}],
+      }
     end
   end
 
   defmodule NotFoundIssuer do
     @behaviour PlugMachineToken.Issuer
-    def get_secret(_conn, _service_name) do
+    def get_secret(_service_name) do
       {:error, :not_found}
+    end
+
+    def get_issuers_paths() do
+      %{
+        "my_service" => [{"GET", []}]
+      }
     end
   end
 
   defmodule InvalidSecretIssuer do
     @behaviour PlugMachineToken.Issuer
-    def get_secret(_conn, _service_name) do
+    def get_secret(_service_name) do
       {:ok, <<1::128>>}
+    end
+
+    def get_issuers_paths() do
+      %{
+        "my_service" => [{"GET", []}]
+      }
     end
   end
 
   defmodule WrongBehaviorIssuer do
-    def get_secret(_conn, _service_name), do: :ok
+    def get_secret(_service_name), do: :ok
+
+    def get_issuers_paths() do
+      %{
+        "my_service" => [{"GET", []}]
+      }
+    end
   end
 
   test "Passes without affecting the conn when the machine key is valid" do
@@ -60,18 +82,18 @@ defmodule PlugMachineTokenTest do
     assert ^conn = call_plug(conn, ServiceIssuer)
   end
 
-  test "Halts when the length differs" do
-    conn = conn(:get, "/homes")
-    |> put_req_header("authorization", @header)
-    |> call_plug(ServiceIssuer)
-    assert_resp(conn, "not_in_service_routes")
-  end
-
   test "Passes when an expiration date is in the future" do
     expires_at = DateTime.utc_now() |> DateTime.add(5, :second)
     header = PlugMachineToken.create_machine_token(@key, %{name: "my_service", expires_at: expires_at})
     conn = create_conn(header)
     assert ^conn = call_plug(conn, ServiceIssuer)
+  end
+
+  test "Halts when the length differs" do
+    conn = conn(:get, "/homes")
+    |> put_req_header("authorization", @header)
+    |> call_plug(ServiceIssuer)
+    assert_resp(conn, "issuer_not_authorized")
   end
 
   test "halts if the authorization is missing" do
