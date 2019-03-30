@@ -1,21 +1,7 @@
 # AtysApi
 
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `atys_api` to your list of dependencies in `mix.exs`:
+## Creating a new machine_key
 
 ```elixir
-def deps do
-  [
-    {:atys_api, "~> 0.1.0"}
-  ]
-end
+AtysApi.Service.Secret.create_machine_key(%{auth_header: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ2YXVsdCJ9.UAeEJ70l5YfyZ_4z_Qi4oD0U1En2ZdRZiKlEWsSUlRs", request_id: "1", project_id: "613ad646-be72-465f-a749-5822e85e8a10", key: "my cool key"})
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/atys_api](https://hexdocs.pm/atys_api).
-

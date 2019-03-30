@@ -1,4 +1,4 @@
-defmodule AtysApi.Token do
+defmodule AtysApi.Service.Token do
   require AtysApi.Errors
   alias AtysApi.{Errors, Request}
 
