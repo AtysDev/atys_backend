@@ -17,4 +17,12 @@ defmodule Secret.MachineKey do
     |> cast(params, [:project_id, :key])
     |> validate_required([:project_id, :key])
   end
+
+  defimpl Jason.Encoder do
+    def encode(%Secret.MachineKey{} = machine_key, opts) do
+      Map.from_struct(machine_key)
+      |> Map.delete(:__meta__)
+      |> Jason.Encode.map(opts)
+    end
+  end
 end
