@@ -4,7 +4,7 @@ defmodule Secret.MachineSecretStore do
   @impl true
   def get_issuers_paths() do
     %{
-      "vault" => [{"POST", []},]
+      "vault" => [{"POST", []}]
     }
   end
 

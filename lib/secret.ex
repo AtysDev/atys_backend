@@ -5,9 +5,9 @@ defmodule Secret do
   require Errors
   use Plug.Builder
 
-  plug PlugMachineToken, issuer: Secret.MachineSecretStore
+  plug(PlugMachineToken, issuer: Secret.MachineSecretStore)
   plug(AtysApi.PlugJson)
-  plug :route
+  plug(:route)
 
   @create_machine_key_schema %{
                                "type" => "object",
@@ -25,11 +25,11 @@ defmodule Secret do
 
   def route(%Conn{path_info: [], method: "POST"} = conn, _opts) do
     with {:ok, conn, %{data: data}} <- Responder.get_values(conn, @create_machine_key_schema),
-      {:ok, machine_id} <- insert_machine_key(data) do
-        Responder.respond(conn, data: %{id: machine_id}, send_response: true)
-      else
-        error -> Responder.handle_error(conn, error)
-      end
+         {:ok, machine_id} <- insert_machine_key(data) do
+      Responder.respond(conn, data: %{id: machine_id}, send_response: true)
+    else
+      error -> Responder.handle_error(conn, error)
+    end
   end
 
   def route(conn, _opts) do

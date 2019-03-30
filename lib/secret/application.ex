@@ -16,6 +16,7 @@ defmodule Secret.Application do
 
   defp start_server(secrets) do
     Application.put_env(:secret, :machine_secrets, secrets)
+
     children = [
       {Secret.Repo, []},
       Plug.Cowboy.child_spec(scheme: :http, plug: Secret, options: [port: 4002])
