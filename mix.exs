@@ -5,6 +5,7 @@ defmodule AtysBackend.MixProject do
     [
       apps_path: "apps",
       start_permanent: Mix.env() == :prod,
+      aliases: aliases(),
       deps: deps()
     ]
   end
@@ -16,5 +17,11 @@ defmodule AtysBackend.MixProject do
   # Run "mix help deps" for examples and options.
   defp deps do
     []
+  end
+
+  defp aliases do
+    [
+      test: "test --no-start"
+    ]
   end
 end

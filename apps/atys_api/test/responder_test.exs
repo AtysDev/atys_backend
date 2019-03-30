@@ -32,7 +32,7 @@ defmodule ResponderTest do
 
     request_data =
       Jason.encode!(%{
-        meta: %{request_id: 1},
+        meta: %{request_id: "1"},
         data: %{user_id: 22}
       })
 
