@@ -1,19 +1,15 @@
 defmodule Secret.MachineSecretStore do
   @behaviour PlugMachineToken.Issuer
 
-  @service_routes %{
-    "project" => [{"POST", []},]
-  }
-
-  def get_secret(conn, service) do
-    routes = Map.get(@service_routes, service, [])
-    case PlugMachineToken.Issuer.is_allowed?(conn, routes) do
-      true -> get_key(service)
-      false -> {:error, :not_in_service_routes}
-    end
+  @impl true
+  def get_issuers_paths() do
+    %{
+      "vault" => [{"POST", []},]
+    }
   end
 
-  defp get_key(service) do
+  @impl true
+  def get_secret(service) do
     Application.get_env(:secret, :machine_secrets)
     |> Map.fetch(service)
     |> case do
@@ -21,5 +17,4 @@ defmodule Secret.MachineSecretStore do
       {:ok, value} -> {:ok, value}
     end
   end
-
 end

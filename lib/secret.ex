@@ -5,7 +5,7 @@ defmodule Secret do
   require Errors
   use Plug.Builder
 
-  # plug PlugMachineToken, issuer: MachineSecretStore
+  plug PlugMachineToken, issuer: Secret.MachineSecretStore
   plug(AtysApi.PlugJson)
   plug :route
 
