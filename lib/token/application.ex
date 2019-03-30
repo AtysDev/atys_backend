@@ -5,7 +5,7 @@ defmodule Token.Application do
 
   def start(_type, _args) do
     Application.get_env(:token, :machine_secrets_json)
-    |> Token.SecretsParser.parse()
+    |> PlugMachineToken.SecretsParser.parse()
     |> case do
       {:ok, secrets} -> start_server(secrets)
       {:error, reason} -> {:error, reason}
