@@ -5,6 +5,10 @@ defmodule Auth.MixProject do
     [
       app: :auth,
       version: "0.1.0",
+      build_path: "../../_build",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -22,7 +26,7 @@ defmodule Auth.MixProject do
   defp deps do
     [
       {:mint, git: "git@github.com:ericmj/mint.git", branch: "master", override: true},
-      {:atys_api, git: "git@github.com:AtysDev/atys_api.git", branch: "master", env: Mix.env()},
+      {:atys_api, in_umbrella: true, env: Mix.env()},
       {:atys, git: "git@github.com:AtysDev/atys.git", branch: "master"},
       {:cors_plug, "~> 2.0"},
       {:jason, "~> 1.1"},

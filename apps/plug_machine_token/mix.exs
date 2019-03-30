@@ -5,6 +5,10 @@ defmodule PlugMachineToken.MixProject do
     [
       app: :plug_machine_token,
       version: "0.1.0",
+      build_path: "../../_build",
+      config_path: "../../config/config.exs",
+      deps_path: "../../deps",
+      lockfile: "../../mix.lock",
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -19,7 +23,7 @@ defmodule PlugMachineToken.MixProject do
 
   defp deps do
     [
-      {:atys_api, git: "git@github.com:AtysDev/atys_api.git", branch: "master", env: Mix.env()},
+      {:atys_api, in_umbrella: true, env: Mix.env()},
       {:jason, "~> 1.1"},
       {:jose, "~> 1.9"},
       {:plug_cowboy, "~> 2.0"}
