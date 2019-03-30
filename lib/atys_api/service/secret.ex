@@ -38,4 +38,20 @@ defmodule AtysApi.Service.Secret do
 
     Request.send(url, request_id, opts)
   end
+
+  def delete_machine_key(%{auth_header: auth_header, request_id: request_id, id: id}) do
+    url = Application.get_env(:atys_api, :secret_url)
+    |> URI.merge("/#{id}")
+    |> to_string()
+    |> URI.encode()
+
+    opts = [
+      headers: [
+        {"Authorization", auth_header}
+      ],
+      method: :delete,
+    ]
+
+    Request.send(url, request_id, opts)
+  end
 end

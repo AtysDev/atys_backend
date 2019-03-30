@@ -18,7 +18,7 @@ defmodule AtysApi.Request do
     response =
       case Keyword.get(opts, :method, :get) do
         :get -> get(url, request, opts)
-        :post -> post(url, request, opts)
+        method when method in [:post, :put, :patch, :delete]-> post(url, request, opts)
       end
 
     AtysApi.Logger.log_response(url, response)
