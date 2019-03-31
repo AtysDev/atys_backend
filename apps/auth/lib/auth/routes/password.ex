@@ -80,8 +80,7 @@ defmodule Auth.Routes.Password do
   end
 
   defp update_password(id, new_password) do
-    %User{id: id}
-    |> User.changeset(%{password: new_password})
+    User.set_password(%User{id: id}, new_password)
     |> Repo.update()
   end
 end

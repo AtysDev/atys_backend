@@ -29,6 +29,13 @@ defmodule Auth.User do
     |> validate_required([:normalized_email, :password_hash])
   end
 
+  def set_password(user, password) do
+    user
+    |> change(%{password: password})
+    |> hash_password()
+    |> validate_required([:password_hash])
+  end
+
   def get_email_address(%User{user_data: user_data}) do
     Jason.decode!(user_data)["email"]
   end
