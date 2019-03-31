@@ -1,7 +1,6 @@
 defmodule Auth.Routes.Password do
   alias Plug.Conn
-  alias Auth.Email
-  alias Auth.User
+  alias Auth.{Email, Repo, User}
   alias Atys.Plugs.SideUnchanneler
   alias AtysApi.{Errors, Responder}
   use Plug.Builder
@@ -56,7 +55,7 @@ defmodule Auth.Routes.Password do
     with {:ok, conn, %{data: %{"token" => token, "password" => new_password}}} <-
            Responder.get_values(conn, @reset_schema, frontend_request: true),
          {:ok, id} <- validate_token(token),
-         :ok <- User.update_password(id, new_password) do
+         {:ok, _user} <- update_password(id, new_password) do
       Sider.remove(:email_tokens, token)
       Responder.respond(conn)
     else
@@ -67,8 +66,8 @@ defmodule Auth.Routes.Password do
   def reset(conn, _opts), do: conn
 
   defp send_reset_email_if_valid(email) do
-    case User.find(email: email) do
-      {:ok, %User{id: id}} -> Email.reset_password(email: email, id: id)
+    case User.get_by_email(email) do
+      {:ok, user} -> Email.reset_password(user)
       _ -> :ok
     end
   end
@@ -78,5 +77,11 @@ defmodule Auth.Routes.Password do
       {:ok, id} -> {:ok, id}
       {:error, :missing_key} -> {:error, Errors.reason(:unauthorized)}
     end
+  end
+
+  defp update_password(id, new_password) do
+    %User{id: id}
+    |> User.changeset(%{password: new_password})
+    |> Repo.update()
   end
 end

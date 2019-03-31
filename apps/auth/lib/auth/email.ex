@@ -1,8 +1,11 @@
 defmodule Auth.Email do
+  alias Auth.User
+
   @one_day 24 * 60 * 60 * 1000
   @one_hour 60 * 60 * 1000
 
-  def confirm_email_address(email: email, id: id) do
+  def confirm_email_address(%User{id: id} = user) do
+    email = User.get_email_address(user)
     token = create_token()
     Sider.set(:email_tokens, token, id, @one_day)
 
@@ -27,7 +30,8 @@ defmodule Auth.Email do
     send_email(email, email_body)
   end
 
-  def reset_password(email: email, id: id) do
+  def reset_password(%User{id: id} = user) do
+    email = User.get_email_address(user)
     token = create_token()
     Sider.set(:email_tokens, token, id, @one_hour)
 

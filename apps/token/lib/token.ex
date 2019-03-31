@@ -15,7 +15,7 @@ defmodule Token do
     "type" => "object",
     "properties" => %{
       "user_id" => %{
-        "type" => "number"
+        "type" => "string"
       }
     },
     "required" => ["user_id"]

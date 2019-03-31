@@ -1,6 +1,7 @@
 defmodule Auth.Routes.Confirm do
   alias Plug.Conn
   alias Auth.User
+  alias Auth.Repo
   alias Atys.Plugs.SideUnchanneler
   alias AtysApi.{Errors, Responder}
   use Plug.Builder
@@ -25,7 +26,7 @@ defmodule Auth.Routes.Confirm do
     with {:ok, conn, %{data: %{"token" => token}}} <-
            Responder.get_values(conn, @confirm_schema, frontend_request: true),
          {:ok, id} <- validate_token(token),
-         :ok <- User.confirm_email(id) do
+         :ok <- confirm_email(id) do
       Responder.respond(conn)
     else
       error -> Responder.handle_error(conn, error)
@@ -37,7 +38,16 @@ defmodule Auth.Routes.Confirm do
   defp validate_token(token) do
     case Sider.get(:email_tokens, token) do
       {:ok, id} -> {:ok, id}
-      {:error, :missing_key} -> {:error, Errors.reason(:item_not_found)}
+      {:error, :missing_key} -> {:error, Errors.reason(:unauthorized)}
+    end
+  end
+
+  defp confirm_email(id) do
+    Ecto.Changeset.change(%User{id: id}, confirmed: true)
+    |> Repo.update()
+    |> case do
+      {:ok, _user} -> :ok
+      {:error, changeset} -> {:error, Errors.unexpected(changeset)}
     end
   end
 end

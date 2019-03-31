@@ -10,6 +10,7 @@ defmodule Auth.MixProject do
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
       elixir: "~> 1.8",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -25,16 +26,22 @@ defmodule Auth.MixProject do
 
   defp deps do
     [
-      {:mint, git: "git@github.com:ericmj/mint.git", branch: "master", override: true},
       {:atys_api, in_umbrella: true, env: Mix.env()},
       {:atys, git: "git@github.com:AtysDev/atys.git", branch: "master"},
       {:cors_plug, "~> 2.0"},
+      {:ecto, "~> 3.0"},
+      {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.1"},
-      {:mojito, "~> 0.1.0"},
+      {:modglobal, "~> 0.2.4", only: :test},
+      {:mox, "~> 0.5.0", only: :test},
       {:pbkdf2_elixir, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, "~> 0.14.1"},
-      {:sider, "~> 0.1.0"}
+      {:sider, "~> 0.1.0"},
+      {:token, in_umbrella: true, only: :test}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
+  defp elixirc_paths(_),     do: ["lib"]
 end

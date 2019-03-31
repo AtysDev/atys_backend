@@ -1,10 +1,81 @@
 defmodule Auth.User do
   alias AtysApi.Errors
+  alias Auth.User
+  alias Auth.Repo
   require Errors
+  use Ecto.Schema
+  import Ecto.Changeset
 
-  defstruct id: nil, password_hash: nil, user_data: %{}, confirmed?: false
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @timestamps_opts [type: :utc_datetime]
 
-  def normalize_email(email) do
+  schema "users" do
+    field(:email, :string, virtual: true)
+    field(:normalized_email, :string)
+    field(:password_hash, :string)
+    field(:password, :string, virtual: true)
+    field(:user_data, :string)
+    field(:confirmed, :boolean)
+    timestamps()
+  end
+
+  def changeset(user, params \\ %{}) do
+    user
+    |> cast(params, [:email, :password])
+    |> normalize_email()
+    |> set_user_data()
+    |> hash_password()
+    |> unique_constraint(:normalized_email)
+    |> validate_required([:normalized_email, :password_hash])
+  end
+
+  def get_email_address(%User{user_data: user_data}) do
+    Jason.decode!(user_data)["email"]
+  end
+
+  def get_by_id(id) do
+    case Repo.get(User, id) do
+      nil -> {:error, Errors.reason(:item_not_found)}
+      user -> {:ok, user}
+    end
+  end
+
+  def get_by_email(email) do
+    case Repo.get_by(User, normalized_email: get_normalized_email(email)) do
+      nil -> {:error, Errors.reason(:item_not_found)}
+      user -> {:ok, user}
+    end
+  end
+
+  def validate_password(%User{password_hash: password_hash}, password) do
+    case Pbkdf2.verify_pass(password, password_hash) do
+      true -> :ok
+      false -> {:error, Errors.reason(:unauthorized)}
+    end
+  end
+
+  defp normalize_email(%Ecto.Changeset{valid?: true, changes: %{email: email}} = changeset) do
+    put_change(changeset, :normalized_email, get_normalized_email(email))
+  end
+  defp normalize_email(changeset), do: changeset
+
+  defp hash_password(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
+    put_change(changeset, :password_hash, Pbkdf2.hash_pwd_salt(password))
+    |> delete_change(:password)
+  end
+  defp hash_password(changeset) do
+    delete_change(changeset, :password)
+  end
+
+  defp set_user_data(%Ecto.Changeset{valid?: true, changes: %{email: email}} = changeset) do
+    case Jason.encode(%{email: email}) do
+      {:ok, user_data} -> put_change(changeset, :user_data, user_data)
+      _error -> add_error(changeset, :user_data, "Cannot encode user_data")
+    end
+  end
+  defp set_user_data(changeset), do: changeset
+
+  defp get_normalized_email(email) do
     String.downcase(email)
     |> String.split("@")
     |> case do
@@ -17,80 +88,4 @@ defmodule Auth.User do
         email
     end
   end
-
-  def create(email: email, password: password) do
-    user_data = %{email: email} |> Jason.encode!()
-
-    Postgrex.query(
-      :db,
-      "INSERT into users (normalized_email, password_hash, user_data) VALUES($1, $2, $3) RETURNING id",
-      [
-        normalize_email(email),
-        hash_password(password),
-        user_data
-      ]
-    )
-    |> case do
-      {:ok, %Postgrex.Result{columns: ["id"], rows: [[user_id]]}} ->
-        {:ok, user_id}
-
-      {:error,
-       %Postgrex.Error{
-         postgres: %{code: :unique_violation, constraint: "users_normalized_email_key"}
-       }} ->
-        {:error, Errors.reason(:item_already_exists)}
-
-      {:error, error} ->
-        {:error, Errors.unexpected(error)}
-    end
-  end
-
-  def confirm_email(id) do
-    Postgrex.query(:db, "UPDATE users set confirmed = true WHERE id = $1", [id])
-    |> parse_update_result()
-  end
-
-  def update_password(id, password) do
-    hashed = hash_password(password)
-
-    Postgrex.query(:db, "UPDATE users set password_hash = $2 WHERE id = $1", [id, hashed])
-    |> parse_update_result()
-  end
-
-  def validate_password(%Auth.User{password_hash: hash}, password) do
-    case Pbkdf2.verify_pass(password, hash) do
-      true -> :ok
-      false -> {:error, Errors.reason(:unauthorized)}
-    end
-  end
-
-  def find(email: email) do
-    normalized = normalize_email(email)
-
-    with {:ok, %Postgrex.Result{rows: [row]}} <-
-           Postgrex.query(:db, "SELECT * from users where normalized_email = $1", [normalized]) do
-      [id, _email_normalized, password_hash, user_data, confirmed] = row
-
-      user = %Auth.User{
-        id: id,
-        password_hash: password_hash,
-        user_data: Jason.decode!(user_data),
-        confirmed?: confirmed
-      }
-
-      {:ok, user}
-    else
-      {:ok, _result} -> {:error, Errors.reason(:item_not_found)}
-      {:error, _error} -> {:error, Errors.reason(:cannot_contact_server)}
-    end
-  end
-
-  defp parse_update_result(query_result) do
-    case query_result do
-      {:ok, %Postgrex.Result{num_rows: 1}} -> :ok
-      {_, result} -> {:error, Errors.unexpected(result)}
-    end
-  end
-
-  defp hash_password(password), do: Pbkdf2.hash_pwd_salt(password)
 end

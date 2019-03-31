@@ -8,7 +8,6 @@ Web endpoint to create and log into an account
 ### Creating an account
 
 ```bash
-curl --data "email=myemail8@atys.dev&password=foobar" http://localhost:4001/register/
 curl -H "Content-Type: application/json" --data '{"data":{"email":"myemail8@atys.dev","password":"foobar"}}' -v http://localhost:4001/register
  ```
 

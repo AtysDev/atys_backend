@@ -1,14 +1,14 @@
 use Mix.Config
 
+config :auth, Auth.Repo,
+  database: "atys_auth_dev",
+  username: "postgres",
+  password: "",
+  hostname: "localhost",
+  port: 5432
+
 config :auth,
-  db_conn: [
-    username: "postgres",
-    password: "",
-    database: "atys_dev",
-    hostname: "localhost",
-    port: "5432"
-  ],
-  email_provider: Auth.MockEmailProvider,
+  email_provider: Auth.DevEmailProvider,
   token_auth_header:
     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhdXRoIn0.KZIiseeYISnFQXDFAIx9MPAftLfdvY7uABGBpl21Aww"
 

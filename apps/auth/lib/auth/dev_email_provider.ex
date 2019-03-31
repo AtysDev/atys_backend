@@ -1,4 +1,4 @@
-defmodule Auth.MockEmailProvider do
+defmodule Auth.DevEmailProvider do
   @behaviour Auth.EmailProvider
   def send(email: email, body: body) do
     IO.puts("Pretending to send the email to #{email}: \n\n#{body}")
