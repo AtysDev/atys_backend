@@ -24,11 +24,11 @@ defmodule AtysApi.Service.Token do
   end
 
   def get_user_id(%{auth_header: auth_header, request_id: request_id, token: token}) do
-    url = Application.get_env(:atys_api, :token_url)
-
-    data = %{
-      token: token
-    }
+    url =
+      Application.get_env(:atys_api, :token_url)
+      |> URI.merge("/#{token}")
+      |> to_string()
+      |> URI.encode()
 
     opts = [
       headers: [
@@ -37,8 +37,7 @@ defmodule AtysApi.Service.Token do
       method: :get,
       expected_failures: [
         Errors.reason(:item_not_found)
-      ],
-      data: data
+      ]
     ]
 
     Request.send(url, request_id, opts)

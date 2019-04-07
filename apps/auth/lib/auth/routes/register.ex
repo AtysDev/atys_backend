@@ -50,7 +50,9 @@ defmodule Auth.Routes.Register do
     User.changeset(%User{}, data)
     |> Repo.insert()
     |> case do
-      {:ok, user} -> {:ok, user}
+      {:ok, user} ->
+        {:ok, user}
+
       {:error, changeset} ->
         if email_exists?(changeset) do
           {:error, AtysApi.Errors.reason(:item_already_exists)}
@@ -61,12 +63,12 @@ defmodule Auth.Routes.Register do
   end
 
   @email_exists_error {"has already been taken",
-  [constraint: :unique, constraint_name: "users_normalized_email_index"]}
-
+                       [constraint: :unique, constraint_name: "users_normalized_email_index"]}
 
   defp sanitize_errors(%Ecto.Changeset{errors: errors}) do
     Keyword.delete(errors, :normalized_email, @email_exists_error)
   end
+
   defp email_exists?(%Ecto.Changeset{errors: [normalized_email: @email_exists_error]}), do: true
   defp email_exists?(_), do: false
 end

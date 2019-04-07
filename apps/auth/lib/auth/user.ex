@@ -64,12 +64,14 @@ defmodule Auth.User do
   defp normalize_email(%Ecto.Changeset{valid?: true, changes: %{email: email}} = changeset) do
     put_change(changeset, :normalized_email, get_normalized_email(email))
   end
+
   defp normalize_email(changeset), do: changeset
 
   defp hash_password(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
     put_change(changeset, :password_hash, Pbkdf2.hash_pwd_salt(password))
     |> delete_change(:password)
   end
+
   defp hash_password(changeset) do
     delete_change(changeset, :password)
   end
@@ -80,6 +82,7 @@ defmodule Auth.User do
       _error -> add_error(changeset, :user_data, "Cannot encode user_data")
     end
   end
+
   defp set_user_data(changeset), do: changeset
 
   defp get_normalized_email(email) do

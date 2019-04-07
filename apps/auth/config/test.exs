@@ -5,7 +5,6 @@ config :auth,
   token_auth_header:
     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhdXRoIn0.KZIiseeYISnFQXDFAIx9MPAftLfdvY7uABGBpl21Aww"
 
-
 config :auth, Auth.Repo,
   database: "atys_auth_test",
   username: "postgres",

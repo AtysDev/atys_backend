@@ -14,6 +14,7 @@ defmodule Token.Application do
 
   defp start_server(secrets) do
     Application.put_env(:token, :machine_secrets, secrets)
+
     children = [
       {Sider, %{capacity: 10000, name: :token_cache}},
       Plug.Cowboy.child_spec(scheme: :http, plug: Token, options: [port: 4000])

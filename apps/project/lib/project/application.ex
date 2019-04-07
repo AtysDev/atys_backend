@@ -21,6 +21,7 @@ defmodule Project.Application do
       {Project.Repo, []},
       Plug.Cowboy.child_spec(scheme: :http, plug: Project, options: [port: 4003])
     ]
+
     opts = [strategy: :one_for_one, name: Project.Supervisor]
     Supervisor.start_link(children, opts)
   end

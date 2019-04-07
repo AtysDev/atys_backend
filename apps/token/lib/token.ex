@@ -7,42 +7,40 @@ defmodule Token do
 
   @thirty_minutes 30 * 60 * 1000
 
-  plug PlugMachineToken, issuer: MachineSecretStore
-  plug AtysApi.PlugJson
-  plug :route
+  plug(PlugMachineToken, issuer: MachineSecretStore)
+  plug(AtysApi.PlugJson)
+  plug(:route)
 
   @create_token_schema %{
-    "type" => "object",
-    "properties" => %{
-      "user_id" => %{
-        "type" => "string"
-      }
-    },
-    "required" => ["user_id"]
-  } |> ExJsonSchema.Schema.resolve()
+                         "type" => "object",
+                         "properties" => %{
+                           "user_id" => %{
+                             "type" => "string"
+                           }
+                         },
+                         "required" => ["user_id"]
+                       }
+                       |> ExJsonSchema.Schema.resolve()
 
   @get_user_id_schema %{
-    "type" => "object",
-    "properties" => %{
-      "token" => %{
-        "type" => "string"
-      }
-    },
-    "required" => ["token"]
-  } |> ExJsonSchema.Schema.resolve()
+                        "type" => "object",
+                        "properties" => %{}
+                      }
+                      |> ExJsonSchema.Schema.resolve()
 
   def route(%Conn{path_info: [], method: "POST"} = conn, _opts) do
-    with {:ok, conn, %{data: %{"user_id" => user_id}}} <- Responder.get_values(conn, @create_token_schema),
-     {:ok, token} <- set_token(user_id) do
+    with {:ok, conn, %{data: %{"user_id" => user_id}}} <-
+           Responder.get_values(conn, @create_token_schema),
+         {:ok, token} <- set_token(user_id) do
       Responder.respond(conn, data: %{token: token}, send_response: true)
     else
       error -> Responder.handle_error(conn, error)
     end
   end
 
-  def route(%Conn{path_info: [], method: "GET"} = conn, _opts) do
-    with {:ok, conn, %{data: %{"token" => token}}} <- Responder.get_values(conn, @get_user_id_schema),
-    {:ok, user_id} <- get_user_id(token) do
+  def route(%Conn{path_info: [token], method: "GET"} = conn, _opts) do
+    with {:ok, conn, _data} <- Responder.get_values(conn, @get_user_id_schema),
+         {:ok, user_id} <- get_user_id(token) do
       Responder.respond(conn, data: %{user_id: user_id}, send_response: true)
     else
       error -> Responder.handle_error(conn, error)
@@ -55,6 +53,7 @@ defmodule Token do
 
   defp set_token(user_id) do
     token = create_token()
+
     case Sider.set(:token_cache, token, user_id, @thirty_minutes) do
       :ok -> {:ok, token}
       {:error, :max_capacity} -> {:error, Errors.reason(:cache_full)}
@@ -63,8 +62,11 @@ defmodule Token do
 
   defp get_user_id(token) do
     case Sider.get(:token_cache, token) do
-      {:ok, user_id} -> {:ok, user_id}
-      {:error, :missing_key} -> {:error, Errors.reason(:item_not_found), %{message: "token not found"}}
+      {:ok, user_id} ->
+        {:ok, user_id}
+
+      {:error, :missing_key} ->
+        {:error, Errors.reason(:item_not_found), %{message: "token not found"}}
     end
   end
 

@@ -23,8 +23,12 @@ defmodule PlugMachineTokenTest do
 
     def get_issuers_paths() do
       %{
-        "my_service" => [{"GET", []}, {"GET", ["homes", :wildcard]}, {"POST", ["homes", :wildcard, "owners"]}],
-        "car_service" => [{"GET", []}, {"POST", ["cars"]}],
+        "my_service" => [
+          {"GET", []},
+          {"GET", ["homes", :wildcard]},
+          {"POST", ["homes", :wildcard, "owners"]}
+        ],
+        "car_service" => [{"GET", []}, {"POST", ["cars"]}]
       }
     end
   end
@@ -71,28 +75,37 @@ defmodule PlugMachineTokenTest do
   end
 
   test "Passes with a wildcard route" do
-    conn = conn(:get, "/homes/22")
-    |> put_req_header("authorization", @header)
+    conn =
+      conn(:get, "/homes/22")
+      |> put_req_header("authorization", @header)
+
     assert ^conn = call_plug(conn, ServiceIssuer)
   end
 
   test "Passes with a wildcard route in the middle" do
-    conn = conn("post", "/homes/22/owners")
-    |> put_req_header("authorization", @header)
+    conn =
+      conn("post", "/homes/22/owners")
+      |> put_req_header("authorization", @header)
+
     assert ^conn = call_plug(conn, ServiceIssuer)
   end
 
   test "Passes when an expiration date is in the future" do
     expires_at = DateTime.utc_now() |> DateTime.add(5, :second)
-    header = PlugMachineToken.create_machine_token(@key, %{name: "my_service", expires_at: expires_at})
+
+    header =
+      PlugMachineToken.create_machine_token(@key, %{name: "my_service", expires_at: expires_at})
+
     conn = create_conn(header)
     assert ^conn = call_plug(conn, ServiceIssuer)
   end
 
   test "Halts when the length differs" do
-    conn = conn(:get, "/homes")
-    |> put_req_header("authorization", @header)
-    |> call_plug(ServiceIssuer)
+    conn =
+      conn(:get, "/homes")
+      |> put_req_header("authorization", @header)
+      |> call_plug(ServiceIssuer)
+
     assert_resp(conn, "issuer_not_authorized")
   end
 
@@ -164,14 +177,18 @@ defmodule PlugMachineTokenTest do
   end
 
   test "halts if the callback doesn't return the correct signature" do
-    conn = create_conn(@header)
+    conn =
+      create_conn(@header)
       |> call_plug(WrongBehaviorIssuer)
+
     assert_resp(conn, "invalid_issuer_callback_response")
   end
 
   test "halts if the signature is invalid" do
-    conn = create_conn(@wrong_key_header)
+    conn =
+      create_conn(@wrong_key_header)
       |> call_plug(ServiceIssuer)
+
     assert_resp(conn, "bad_signature")
   end
 
@@ -181,8 +198,10 @@ defmodule PlugMachineTokenTest do
     auth_header =
       PlugMachineToken.create_machine_token(@key, %{name: "my_service", expires_at: expires_at})
 
-    conn = create_conn(auth_header)
+    conn =
+      create_conn(auth_header)
       |> call_plug(ServiceIssuer)
+
     assert_resp(conn, "bad_signature")
   end
 
@@ -198,7 +217,10 @@ defmodule PlugMachineTokenTest do
 
   defp assert_resp(conn, details) do
     assert 403 = conn.status
-    assert %{"reason" => "unauthorized", "data" => %{"details" => ^details}} = Jason.decode!(conn.resp_body)
+
+    assert %{"reason" => "unauthorized", "data" => %{"details" => ^details}} =
+             Jason.decode!(conn.resp_body)
+
     assert true = conn.halted
   end
 end

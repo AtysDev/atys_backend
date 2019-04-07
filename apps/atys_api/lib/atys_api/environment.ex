@@ -3,7 +3,7 @@ defmodule AtysApi.Environment do
     token: 4000,
     auth: 4001,
     secret: 4002,
-    project: 4003,
+    project: 4003
   }
 
   def get(:prod) do

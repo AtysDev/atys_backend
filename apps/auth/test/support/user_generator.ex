@@ -4,11 +4,13 @@ defmodule AtysBackend.TestSupport.UserGenerator do
 
   def create_user(password \\ "foobar") do
     email = "#{Ecto.UUID.generate()}@aty.dev"
+
     data = %{
       email: email,
       password: password
     }
-    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email, body:  body ->
+
+    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email, body: body ->
       [_, token] = Regex.run(~r/token below:(?:\s+?)(\S+?)\n/, body)
       set_global(email, token)
       :ok

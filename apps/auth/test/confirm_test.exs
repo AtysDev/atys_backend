@@ -8,6 +8,7 @@ defmodule AuthConfirmTest do
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Auth.Repo)
   end
+
   setup :verify_on_exit!
 
   test "Successfully confirms" do

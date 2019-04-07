@@ -3,7 +3,11 @@ defmodule AtysApi.Responder do
   require AtysApi.Errors
   alias AtysApi.Errors
 
-  @spec handle_error(Plug.Conn.t(), {:error, %AtysApi.Error{} | atom()} | {:error, atom(), map()}, keyword()) ::
+  @spec handle_error(
+          Plug.Conn.t(),
+          {:error, %AtysApi.Error{} | atom()} | {:error, atom(), map()},
+          keyword()
+        ) ::
           Plug.Conn.t()
   def handle_error(conn, error, opts \\ []) do
     send_response = Keyword.get(opts, :send_response, false)
@@ -32,6 +36,7 @@ defmodule AtysApi.Responder do
                |> ExJsonSchema.Schema.resolve()
 
   def get_values(conn, schema), do: get_values(conn, schema, [])
+
   def get_values(%Conn{method: "GET"} = conn, %ExJsonSchema.Schema.Root{} = schema, opts) do
     with conn <- Conn.fetch_query_params(conn, length: 10_000),
          {:ok, request} <- get_json_from_query(conn),
@@ -41,7 +46,7 @@ defmodule AtysApi.Responder do
     end
   end
 
-  def get_values(conn,  %ExJsonSchema.Schema.Root{} = schema, opts) do
+  def get_values(conn, %ExJsonSchema.Schema.Root{} = schema, opts) do
     with {:ok, values} <- verify_request(conn.body_params, schema, opts) do
       {:ok, conn, values}
     end
@@ -113,7 +118,6 @@ defmodule AtysApi.Responder do
   defp get_json_from_query(_conn),
     do: {:error, Errors.reason(:invalid_param), %{missing_field: "r"}}
 
-
   defp get_meta(%{"meta" => %{} = meta}), do: {:ok, meta}
   defp get_meta(_), do: {:error, Errors.reason(:cannot_decode_request)}
 
@@ -127,7 +131,7 @@ defmodule AtysApi.Responder do
     end
   end
 
-  @spec validate_to_schema(map(), ExJsonSchema.Schema.Root.t) :: :ok | {:errors, atom(), map()}
+  @spec validate_to_schema(map(), ExJsonSchema.Schema.Root.t()) :: :ok | {:errors, atom(), map()}
   defp validate_to_schema(%{} = data, %ExJsonSchema.Schema.Root{} = schema) do
     case ExJsonSchema.Validator.validate(schema, data) do
       :ok -> :ok

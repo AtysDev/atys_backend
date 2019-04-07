@@ -14,4 +14,5 @@ config :secret, Secret.Repo,
 # Corresponding project token is "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwcm9qZWN0X2FwaSJ9.8eZo6skLWPhTs7xs1dBptJCOUBey1h1_kSy5dJ33rCE"
 # This was generated with  PlugMachineToken.create_machine_token(<<2::256>>, %{name: "vault"})
 config :secret,
-  machine_secrets_json: "{\"project_api\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM=\",\"vault\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=\"}"
+  machine_secrets_json:
+    "{\"project_api\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM=\",\"vault\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=\"}"

@@ -4,7 +4,8 @@ defmodule Token.MachineSecretStore do
   @impl true
   def get_issuers_paths() do
     %{
-      "auth" => [{"POST", []},]
+      "auth" => [{"POST", []}],
+      "project" => [{"GET", [:wildcard]}]
     }
   end
 

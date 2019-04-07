@@ -7,6 +7,7 @@ defmodule AuthRegisterTest do
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Auth.Repo)
   end
+
   setup :verify_on_exit!
 
   test "Successfully registers a new user" do
@@ -18,19 +19,27 @@ defmodule AuthRegisterTest do
   end
 
   test "Send a response if the email is already registered" do
-    email = UserGenerator.create_user()
-    |> elem(0)
-    |> String.upcase()
+    email =
+      UserGenerator.create_user()
+      |> elem(0)
+      |> String.upcase()
 
-    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email, body: "Hello! You've tried to create a new account at Atys." <> _rest ->
+    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email,
+                                                 body:
+                                                   "Hello! You've tried to create a new account at Atys." <>
+                                                     _rest ->
       :ok
     end)
+
     conn = call_register_user(%{email: email, password: "foobar"})
     assert 200 = conn.status
   end
 
   defp expect_register_email() do
-    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email, body: "Hello! Welcome to Atys. Please confirm your email" <> _rest ->
+    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email,
+                                                 body:
+                                                   "Hello! Welcome to Atys. Please confirm your email" <>
+                                                     _rest ->
       :ok
     end)
   end

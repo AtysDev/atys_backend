@@ -9,6 +9,7 @@ defmodule AuthPasswordTest do
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Auth.Repo)
   end
+
   setup :verify_on_exit!
 
   test "successfully resets a password" do
@@ -27,14 +28,17 @@ defmodule AuthPasswordTest do
   test "silently ignores a password reset to an invalid email" do
     query = Jason.encode!(%{data: %{email: "notarealemail"}})
     url = "/password/reset?#{URI.encode_query(r: query)}"
-    conn = conn(:get, url)
-    |> put_req_header("content-type", "application/json")
-    |> Auth.call(Auth.init([]))
+
+    conn =
+      conn(:get, url)
+      |> put_req_header("content-type", "application/json")
+      |> Auth.call(Auth.init([]))
+
     assert 200 = conn.status
   end
 
   defp start_valid_reset(email) do
-    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email, body:  body ->
+    Mox.expect(Auth.EmailProviderMock, :send, fn email: _email, body: body ->
       [_, token] = Regex.run(~r/token below:(?:\s+?)(\S+?)\n/, body)
       set_global(email, token)
       :ok
@@ -42,9 +46,11 @@ defmodule AuthPasswordTest do
 
     query = Jason.encode!(%{data: %{email: email}})
     url = "/password/reset?#{URI.encode_query(r: query)}"
-    conn = conn(:get, url)
-    |> put_req_header("content-type", "application/json")
-    |> Auth.call(Auth.init([]))
+
+    conn =
+      conn(:get, url)
+      |> put_req_header("content-type", "application/json")
+      |> Auth.call(Auth.init([]))
 
     {conn, get_global(email)}
   end

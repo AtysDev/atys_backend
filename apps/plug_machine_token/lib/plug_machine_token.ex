@@ -16,14 +16,20 @@ defmodule PlugMachineToken do
 
     @spec is_allowed?(Plug.Conn.t(), allowed_paths) :: boolean()
     def is_allowed?(%Plug.Conn{method: method, path_info: conn_path}, allowed_paths \\ []) do
-      Enum.any?(allowed_paths, fn {^method, allowed_path} ->
-        route_matches?(conn_path: conn_path, allowed_path: allowed_path)
-        _ -> false
+      Enum.any?(allowed_paths, fn
+        {^method, allowed_path} ->
+          route_matches?(conn_path: conn_path, allowed_path: allowed_path)
+
+        _ ->
+          false
       end)
     end
 
     @spec route_matches?(conn_path: [String.t()], allowed_path: path) :: boolean
-    defp route_matches?(conn_path: conn_path, allowed_path: allowed_path) when length(conn_path) != length(allowed_path), do: false
+    defp route_matches?(conn_path: conn_path, allowed_path: allowed_path)
+         when length(conn_path) != length(allowed_path),
+         do: false
+
     defp route_matches?(conn_path: conn_path, allowed_path: allowed_path) do
       Enum.zip(conn_path, allowed_path)
       |> Enum.all?(fn
@@ -92,6 +98,7 @@ defmodule PlugMachineToken do
 
   defp validate_issuer_path(conn, issuer_name, issuers_paths) do
     issuer_paths = Map.get(issuers_paths, issuer_name, [])
+
     case PlugMachineToken.Issuer.is_allowed?(conn, issuer_paths) do
       true -> :ok
       false -> unauthorized(:issuer_not_authorized)
@@ -111,15 +118,20 @@ defmodule PlugMachineToken do
 
   defp validate_authorization(auth_header, jwk: jwk, issuer: issuer) do
     case JWT.verify_strict(jwk, @algorithms, auth_header) do
-      {true, %JWT{fields: %{"iss" => ^issuer, "exp" => _exp}} = jwt, @jws} -> validate_expiration(jwt)
-      {true, %JWT{fields: %{"iss" => ^issuer}} = jwt, @jws} -> {:ok, jwt}
-      _ -> unauthorized(:bad_signature)
+      {true, %JWT{fields: %{"iss" => ^issuer, "exp" => _exp}} = jwt, @jws} ->
+        validate_expiration(jwt)
+
+      {true, %JWT{fields: %{"iss" => ^issuer}} = jwt, @jws} ->
+        {:ok, jwt}
+
+      _ ->
+        unauthorized(:bad_signature)
     end
   end
 
   defp validate_expiration(%JWT{fields: %{"exp" => exp}} = jwt) do
     with {:ok, expires_at} <- DateTime.from_unix(exp),
-    :lt <- DateTime.compare(DateTime.utc_now(), expires_at) do
+         :lt <- DateTime.compare(DateTime.utc_now(), expires_at) do
       {:ok, jwt}
     else
       _ -> unauthorized(:bad_signature)

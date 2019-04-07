@@ -23,7 +23,8 @@ defmodule AtysApi.Errors do
 
   defmacro reason(name) do
     quote bind_quoted: [name: name] do
-      AtysApi.Errors.get_status_code(name) # Used as a side effect to validate the name
+      # Used as a side effect to validate the name
+      AtysApi.Errors.get_status_code(name)
       name
     end
   end
