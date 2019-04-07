@@ -4,7 +4,7 @@ defmodule Project.Repo.Migrations.CreateProjectsTable do
   def change do
     create table("projects") do
       add :user_id, :binary_id, null: false
-      add :attack_probability, :float, null: false, default: 0
+      add :attack_probability, :float, null: false, default: 0.0
       timestamps(type: :utc_datetime)
     end
   end

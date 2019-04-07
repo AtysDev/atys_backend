@@ -34,7 +34,8 @@ defmodule Project.MixProject do
       {:jason, "~> 1.1"},
       {:plug_cowboy, "~> 2.0"},
       {:plug_machine_token, in_umbrella: true, env: Mix.env()},
-      {:postgrex, "~> 0.14.1"}
+      {:postgrex, "~> 0.14.1"},
+      {:token, in_umbrella: true, only: :test}
     ]
   end
 

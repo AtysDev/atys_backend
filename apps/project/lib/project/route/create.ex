@@ -26,9 +26,9 @@ defmodule Project.Route.Create do
          {:ok, user_id} <- validate_token(conn, token),
          {:ok, project_id} <- insert_project(user_id) do
       Responder.respond(conn, data: %{id: project_id})
+    else
+      error -> Responder.handle_error(conn, error)
     end
-
-    send_resp(conn, 200, "hello world")
   end
 
   def create(conn, _opts), do: conn

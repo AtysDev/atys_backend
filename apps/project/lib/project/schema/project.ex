@@ -7,7 +7,7 @@ defmodule Project.Schema.Project do
 
   schema "projects" do
     field(:user_id, Ecto.UUID)
-    field(:attack_probability, :float, default: 0)
+    field(:attack_probability, :float, default: 0.0)
 
     timestamps()
   end

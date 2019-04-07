@@ -5,6 +5,7 @@ defmodule Project do
   use Plug.Builder
 
   plug(CORSPlug)
+  plug(PlugMachineToken, issuer: Project.MachineSecretStore)
   plug(AtysApi.PlugJson)
   plug(Plug.RequestId)
   plug(Route.Create)
