@@ -1,4 +1,4 @@
-defmodule Secret.Application do
+defmodule Project.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -6,7 +6,7 @@ defmodule Secret.Application do
   use Application
 
   def start(_type, _args) do
-    Application.get_env(:secret, :machine_secrets_json)
+    Application.get_env(:project, :machine_secrets_json)
     |> PlugMachineToken.SecretsParser.parse()
     |> case do
       {:ok, secrets} -> start_server(secrets)
@@ -15,14 +15,13 @@ defmodule Secret.Application do
   end
 
   defp start_server(secrets) do
-    Application.put_env(:secret, :machine_secrets, secrets)
+    Application.put_env(:project, :machine_secrets, secrets)
 
     children = [
-      {Secret.Repo, []},
-      Plug.Cowboy.child_spec(scheme: :http, plug: Secret, options: [port: 4002])
+      {Project.Repo, []},
+      Plug.Cowboy.child_spec(scheme: :http, plug: Project, options: [port: 4003])
     ]
-
-    opts = [strategy: :one_for_one, name: Secret.Supervisor]
+    opts = [strategy: :one_for_one, name: Project.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

@@ -1,5 +1,4 @@
 defmodule AuthLoginTest do
-  alias Auth.User
   alias AtysBackend.TestSupport.UserGenerator
   use ExUnit.Case
   use Plug.Test

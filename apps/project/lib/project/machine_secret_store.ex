@@ -1,4 +1,4 @@
-defmodule Secret.MachineSecretStore do
+defmodule Project.MachineSecretStore do
   @behaviour PlugMachineToken.Issuer
 
   @impl true
@@ -11,7 +11,7 @@ defmodule Secret.MachineSecretStore do
 
   @impl true
   def get_secret(service) do
-    Application.get_env(:secret, :machine_secrets)
+    Application.get_env(:project, :machine_secrets)
     |> Map.fetch(service)
     |> case do
       :error -> {:error, :invalid_issuer_name}
