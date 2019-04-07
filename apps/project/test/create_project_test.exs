@@ -1,9 +1,8 @@
 defmodule CreateProjectTest do
-  alias AtysApi.Service.Token
+  alias Project.TestSupport.ProjectHelpers
   use ExUnit.Case
   use Plug.Test
 
-  @create_token_header "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhdXRoIn0.KZIiseeYISnFQXDFAIx9MPAftLfdvY7uABGBpl21Aww"
   @create_project_header "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwcm9qZWN0X2FwaSJ9.v8suXLqJ5Vm6eXddObCZc2izMrF_hxbSTQiHObKZpaM"
 
   setup do
@@ -11,29 +10,23 @@ defmodule CreateProjectTest do
   end
 
   test "creates a new project" do
-    {user_id, token} = create_user()
+    {user_id, token} = ProjectHelpers.create_user()
     conn = call_create(%{token: token})
     assert 200 = conn.status
     assert %{"data" => %{"id" => id}} = Jason.decode!(conn.resp_body)
-    assert %{id: ^id, user_id: ^user_id, attack_probability: 0.0} = Project.Repo.get(Project.Schema.Project, id)
+
+    assert %{id: ^id, user_id: ^user_id, attack_probability: 0.0} =
+             Project.Repo.get(Project.Schema.Project, id)
   end
 
   test "403 with the wrong authorization" do
-    conn = conn(:post, "/", Jason.encode!(%{meta: %{request_id: "123"}, data: %{}}))
-    |> put_req_header("content-type", "application/json")
-    |> put_req_header("authorization", @create_token_header)
-    |> Project.call(Project.init([]))
+    conn =
+      conn(:post, "/", Jason.encode!(%{meta: %{request_id: "123"}, data: %{}}))
+      |> put_req_header("content-type", "application/json")
+      |> put_req_header("authorization", "Bearer WRONG HEADER")
+      |> Project.call(Project.init([]))
 
     assert 403 = conn.status
-  end
-
-  defp create_user() do
-    user_id = Ecto.UUID.generate()
-
-    {:ok, %{data: %{"token" => token}}} =
-      Token.create_token(%{auth_header: @create_token_header, request_id: "123", user_id: user_id})
-
-    {user_id, token}
   end
 
   defp call_create(data) do

@@ -9,6 +9,7 @@ defmodule Project do
   plug(AtysApi.PlugJson)
   plug(Plug.RequestId)
   plug(Route.Create)
+  plug(Route.Authorized)
   plug(:missing)
 
   def missing(%Conn{state: state} = conn, _opts) when state == :unset do
