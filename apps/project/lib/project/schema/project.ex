@@ -11,6 +11,7 @@ defmodule Project.Schema.Project do
 
   schema "projects" do
     field(:user_id, Ecto.UUID)
+    field(:name, :string)
     field(:attack_probability, :float, default: 0.0)
 
     timestamps()
@@ -18,8 +19,8 @@ defmodule Project.Schema.Project do
 
   def changeset(project, params \\ %{}) do
     project
-    |> cast(params, [:user_id])
-    |> validate_required([:user_id])
+    |> cast(params, [:user_id, :name])
+    |> validate_required([:user_id, :name])
   end
 
   def get_by_id(id) do

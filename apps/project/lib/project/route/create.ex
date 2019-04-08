@@ -13,17 +13,20 @@ defmodule Project.Route.Create do
                    "properties" => %{
                      "token" => %{
                        "type" => "string"
-                     }
+                     },
+                     "name" => %{
+                      "type" => "string"
+                    }
                    },
-                   "required" => ["token"]
+                   "required" => ["token", "name"]
                  }
                  |> ExJsonSchema.Schema.resolve()
 
   def create(%Conn{path_info: [], method: "POST"} = conn, _opts) do
-    with {:ok, conn, %{meta: %{"request_id" => request_id}, data: %{"token" => token}}} <-
+    with {:ok, conn, %{meta: %{"request_id" => request_id}, data: %{"token" => token} = data}} <-
            Responder.get_values(conn, @create_schema),
          {:ok, user_id} <- AuthHelper.validate_token(token, request_id: request_id),
-         {:ok, project_id} <- insert_project(user_id) do
+         {:ok, project_id} <- insert_project(user_id, data) do
       Responder.respond(conn, data: %{id: project_id})
     else
       error -> Responder.handle_error(conn, error)
@@ -32,8 +35,9 @@ defmodule Project.Route.Create do
 
   def create(conn, _opts), do: conn
 
-  defp insert_project(user_id) do
-    Project.changeset(%Project{}, %{user_id: user_id})
+  defp insert_project(user_id, data) do
+    Ecto.Changeset.change(%Project{}, %{user_id: user_id})
+    |> Project.changeset(data)
     |> Repo.insert()
     |> case do
       {:ok, %{id: project_id}} -> {:ok, project_id}

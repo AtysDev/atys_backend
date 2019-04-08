@@ -15,7 +15,7 @@ defmodule Project.TestSupport.ProjectHelpers do
   end
 
   def create_project(token) do
-    data = %{token: token}
+    data = %{token: token, name: "my cool project"}
     conn = conn(:post, "/", Jason.encode!(%{meta: %{request_id: "123"}, data: data}))
     |> put_req_header("content-type", "application/json")
     |> put_req_header("authorization", @create_project_header)

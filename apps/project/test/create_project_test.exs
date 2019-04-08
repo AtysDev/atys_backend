@@ -11,7 +11,7 @@ defmodule CreateProjectTest do
 
   test "creates a new project" do
     {user_id, token} = ProjectHelpers.create_user()
-    conn = call_create(%{token: token})
+    conn = call_create(%{token: token, name: "my new project"})
     assert 200 = conn.status
     assert %{"data" => %{"id" => id}} = Jason.decode!(conn.resp_body)
 
