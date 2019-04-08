@@ -31,7 +31,8 @@ defmodule ProjectApi.MixProject do
       {:mox, "~> 0.5.0", only: :test},
       {:plug_cowboy, "~> 2.0"},
       {:project, in_umbrella: true, only: :test},
-      {:token, in_umbrella: true, only: :test}
+      {:secret, in_umbrella: true, only: :test},
+      {:token, in_umbrella: true, only: :test},
     ]
   end
 end

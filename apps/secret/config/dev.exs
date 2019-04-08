@@ -15,4 +15,4 @@ config :secret, Secret.Repo,
 # This was generated with  PlugMachineToken.create_machine_token(<<2::256>>, %{name: "vault"})
 config :secret,
   machine_secrets_json:
-    "{\"project_api\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM=\",\"vault\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=\"}"
+  "{\"project_api\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM=\",\"vault\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI=\"}"

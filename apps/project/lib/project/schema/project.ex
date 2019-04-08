@@ -33,7 +33,7 @@ defmodule Project.Schema.Project do
   defp validate_id(id) do
     case Ecto.UUID.cast(id) do
       {:ok, id} -> {:ok, id}
-      :error -> {:error, Errors.reason(:invalid_param), %{detail: "not a UUID"}}
+      :error -> {:error, Errors.reason(:invalid_param), %{details: "not a UUID"}}
     end
   end
 

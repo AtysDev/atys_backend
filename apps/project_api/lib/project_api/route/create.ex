@@ -56,8 +56,9 @@ defmodule ProjectApi.Route.Create do
 
   defp create_project(request_id: request_id, token: token, name: name) do
 
+    auth_header = Application.get_env(:project_api, :project_auth_header)
     Project.create_project(%{
-      auth_header: get_auth_header(),
+      auth_header: auth_header,
       request_id: request_id,
       token: token,
       name: name
@@ -70,8 +71,9 @@ defmodule ProjectApi.Route.Create do
   end
 
   defp save_encrypted_machine_key(request_id: request_id, id: project_id, key: encrypted_machine_key) do
+    secret_header = Application.get_env(:project_api, :secret_auth_header)
     Secret.create_machine_key(%{
-      auth_header: get_auth_header(),
+      auth_header: secret_header,
       request_id: request_id,
       project_id: project_id,
       key: encrypted_machine_key
@@ -86,9 +88,5 @@ defmodule ProjectApi.Route.Create do
   defp get_request_id(conn) do
     [request_id] = Conn.get_resp_header(conn, "x-request-id")
     request_id
-  end
-
-  defp get_auth_header() do
-    Application.get_env(:project_api, :token_auth_header)
   end
 end
