@@ -49,6 +49,7 @@ defmodule AuthorizedProjectTest do
     {_user_id, token} = ProjectHelpers.create_user()
     project_id = ProjectHelpers.create_project(token)
     project = %Project.Schema.Project{id: project_id}
+
     Ecto.Changeset.change(project, %{attack_probability: 0.9})
     |> Repo.update()
 
@@ -56,10 +57,10 @@ defmodule AuthorizedProjectTest do
     assert 423 = conn.status
   end
 
-
   defp call_authorized(project_id, token) do
     r = %{meta: %{request_id: "123"}, data: %{token: token}} |> Jason.encode!()
     url = "/#{URI.encode(project_id)}/authorized?#{URI.encode_query(r: r)}"
+
     conn(:get, url)
     |> put_req_header("content-type", "application/json")
     |> put_req_header("authorization", @secret_auth_header)

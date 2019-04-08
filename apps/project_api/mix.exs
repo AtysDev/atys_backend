@@ -1,51 +1,37 @@
-defmodule Project.MixProject do
+defmodule ProjectApi.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :project,
+      app: :project_api,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
       elixir: "~> 1.8",
-      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      aliases: aliases(),
       deps: deps()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger],
-      mod: {Project.Application, []}
+      mod: {ProjectApi.Application, []}
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:atys_api, in_umbrella: true, env: Mix.env()},
+      {:atys, git: "git@github.com:AtysDev/atys.git", branch: "master"},
       {:cors_plug, "~> 2.0"},
-      {:ecto, "~> 3.0"},
-      {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.1"},
+      {:mox, "~> 0.5.0", only: :test},
       {:plug_cowboy, "~> 2.0"},
-      {:plug_machine_token, in_umbrella: true, env: Mix.env()},
-      {:postgrex, "~> 0.14.1"},
+      {:project, in_umbrella: true, only: :test},
       {:token, in_umbrella: true, only: :test}
     ]
   end
-
-  defp aliases do
-    [
-      test: "test --no-start"
-    ]
-  end
-
-  defp elixirc_paths(:test), do: ["test/support", "lib"]
-  defp elixirc_paths(_), do: ["lib"]
 end

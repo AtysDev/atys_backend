@@ -25,11 +25,10 @@ defmodule Project.Schema.Project do
 
   def get_by_id(id) do
     with {:ok, id} <- validate_id(id),
-    {:ok, project} <- query_repo(id) do
+         {:ok, project} <- query_repo(id) do
       {:ok, project}
     end
   end
-
 
   defp validate_id(id) do
     case Ecto.UUID.cast(id) do

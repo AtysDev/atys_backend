@@ -15,8 +15,8 @@ defmodule Project.Route.Create do
                        "type" => "string"
                      },
                      "name" => %{
-                      "type" => "string"
-                    }
+                       "type" => "string"
+                     }
                    },
                    "required" => ["token", "name"]
                  }

@@ -10,10 +10,17 @@ defmodule Project.AuthHelper do
 
     Token.get_user_id(%{auth_header: auth_header, request_id: request_id, token: token})
     |> case do
-      {:ok, %Response{data: %{"user_id" => user_id}}} -> {:ok, user_id}
-      {:ok, response} -> {:error, Errors.unexpected(response)}
-      {:error, %Error{reason: Errors.reason(:item_not_found)}} -> {:error, Errors.reason(:unauthorized)}
-      {:error, response} -> {:error, Errors.unexpected(response)}
+      {:ok, %Response{data: %{"user_id" => user_id}}} ->
+        {:ok, user_id}
+
+      {:ok, response} ->
+        {:error, Errors.unexpected(response)}
+
+      {:error, %Error{reason: Errors.reason(:item_not_found)}} ->
+        {:error, Errors.reason(:unauthorized)}
+
+      {:error, response} ->
+        {:error, Errors.unexpected(response)}
     end
   end
 
