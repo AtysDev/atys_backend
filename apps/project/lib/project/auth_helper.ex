@@ -1,15 +1,12 @@
 defmodule Project.AuthHelper do
-  alias Plug.Conn
-  alias Project.Repo
   alias Project.Schema.Project
   alias AtysApi.{Error, Errors, Response}
   alias AtysApi.Service.Token
   use Plug.Builder
   require Errors
 
-  def validate_token(conn, token) do
+  def validate_token(token, request_id: request_id) do
     auth_header = Application.get_env(:project, :token_auth_header)
-    [request_id] = Conn.get_resp_header(conn, "x-request-id")
 
     Token.get_user_id(%{auth_header: auth_header, request_id: request_id, token: token})
     |> case do
