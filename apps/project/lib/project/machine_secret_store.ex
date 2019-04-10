@@ -4,7 +4,7 @@ defmodule Project.MachineSecretStore do
   @impl true
   def get_issuers_paths() do
     %{
-      "vault" => [{"GET", [:wildcard, "authorized"]}],
+      "vault" => [{"GET", [:wildcard, "machine_authorized"]}],
       "secret" => [{"GET", [:wildcard, "authorized"]}],
       "project_api" => [{"POST", []}, {"DELETE", [:wildcard]}]
     }

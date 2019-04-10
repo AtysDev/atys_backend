@@ -21,14 +21,16 @@ defmodule AtysApi.Service.Project do
         Errors.reason(:item_not_found)
       ]
     ]
+
     Request.send(url, request_id, opts)
   end
 
   def can_access(%{auth_header: auth_header, request_id: request_id, token: token, id: id}) do
-    url = Application.get_env(:atys_api, :project_url)
-    |> URI.merge("/#{id}/authorized")
-    |> to_string()
-    |> URI.encode()
+    url =
+      Application.get_env(:atys_api, :project_url)
+      |> URI.merge("/#{id}/authorized")
+      |> to_string()
+      |> URI.encode()
 
     opts = [
       headers: [
@@ -41,6 +43,33 @@ defmodule AtysApi.Service.Project do
       ],
       data: %{token: token}
     ]
+
+    Request.send(url, request_id, opts)
+  end
+
+  def can_machine_access(%{
+        auth_header: auth_header,
+        request_id: request_id,
+        project_id: project_id
+      }) do
+    url =
+      Application.get_env(:atys_api, :project_url)
+      |> URI.merge("/#{project_id}/machine_authorized")
+      |> to_string()
+      |> URI.encode()
+
+    opts = [
+      headers: [
+        {"Authorization", auth_header}
+      ],
+      method: :get,
+      expected_failures: [
+        Errors.reason(:unauthorized),
+        Errors.reason(:item_not_found)
+      ],
+      data: %{}
+    ]
+
     Request.send(url, request_id, opts)
   end
 end

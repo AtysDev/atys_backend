@@ -87,6 +87,7 @@ defmodule AtysApi.Request do
 
       {:ok, %{"status" => "error", "reason" => reason, "data" => data}} ->
         reason = Errors.reason(String.to_atom(reason))
+
         {:error,
          %AtysApi.Error{
            status_code: status_code,

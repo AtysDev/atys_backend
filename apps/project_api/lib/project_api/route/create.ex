@@ -34,11 +34,16 @@ defmodule ProjectApi.Route.Create do
     with {:ok, conn,
           %{data: %{"token" => token, "name" => name, "key" => key, "machine_key" => machine_key}}} <-
            Responder.get_values(conn, @schema, frontend_request: true),
-          request_id <- get_request_id(conn),
+         request_id <- get_request_id(conn),
          {:ok, encrypted_machine_key} <-
            get_encrypted_machine_key(key: key, machine_key: machine_key),
          {:ok, project_id} <- create_project(request_id: request_id, token: token, name: name),
-         {:ok, machine_key_id} <- save_encrypted_machine_key(request_id: request_id, id: project_id, key: encrypted_machine_key) do
+         {:ok, machine_key_id} <-
+           save_encrypted_machine_key(
+             request_id: request_id,
+             id: project_id,
+             key: encrypted_machine_key
+           ) do
       Responder.respond(conn, data: %{project_id: project_id, machine_key_id: machine_key_id})
     else
       error -> Responder.handle_error(conn, error)
@@ -55,8 +60,8 @@ defmodule ProjectApi.Route.Create do
   end
 
   defp create_project(request_id: request_id, token: token, name: name) do
-
     auth_header = Application.get_env(:project_api, :project_auth_header)
+
     Project.create_project(%{
       auth_header: auth_header,
       request_id: request_id,
@@ -70,8 +75,13 @@ defmodule ProjectApi.Route.Create do
     end
   end
 
-  defp save_encrypted_machine_key(request_id: request_id, id: project_id, key: encrypted_machine_key) do
+  defp save_encrypted_machine_key(
+         request_id: request_id,
+         id: project_id,
+         key: encrypted_machine_key
+       ) do
     secret_header = Application.get_env(:project_api, :secret_auth_header)
+
     Secret.create_machine_key(%{
       auth_header: secret_header,
       request_id: request_id,

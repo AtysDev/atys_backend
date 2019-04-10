@@ -32,7 +32,7 @@ defmodule ProjectApi.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:project, in_umbrella: true, only: :test},
       {:secret, in_umbrella: true, only: :test},
-      {:token, in_umbrella: true, only: :test},
+      {:token, in_umbrella: true, only: :test}
     ]
   end
 end
