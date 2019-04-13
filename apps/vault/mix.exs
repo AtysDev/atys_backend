@@ -26,9 +26,14 @@ defmodule Vault.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
-      # {:sibling_app_in_umbrella, in_umbrella: true}
+      {:atys_api, in_umbrella: true, env: Mix.env()},
+      {:atys, git: "git@github.com:AtysDev/atys.git", branch: "master"},
+      {:cors_plug, "~> 2.0"},
+      {:jason, "~> 1.1"},
+      {:mox, "~> 0.5.0", only: :test},
+      {:plug_cowboy, "~> 2.0"},
+      {:project, in_umbrella: true, only: :test, env: Mix.env()},
+      {:secret, in_umbrella: true, only: :test, env: Mix.env()},
     ]
   end
 end

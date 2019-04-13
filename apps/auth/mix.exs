@@ -38,7 +38,7 @@ defmodule Auth.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:postgrex, "~> 0.14.1"},
       {:sider, "~> 0.1.0"},
-      {:token, in_umbrella: true, only: :test}
+      {:token, in_umbrella: true, only: :test, env: Mix.env()}
     ]
   end
 

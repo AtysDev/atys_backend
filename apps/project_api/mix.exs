@@ -30,9 +30,9 @@ defmodule ProjectApi.MixProject do
       {:jason, "~> 1.1"},
       {:mox, "~> 0.5.0", only: :test},
       {:plug_cowboy, "~> 2.0"},
-      {:project, in_umbrella: true, only: :test},
-      {:secret, in_umbrella: true, only: :test},
-      {:token, in_umbrella: true, only: :test}
+      {:project, in_umbrella: true, only: :test, env: Mix.env()},
+      {:secret, in_umbrella: true, only: :test, env: Mix.env()},
+      {:token, in_umbrella: true, only: :test, env: Mix.env()}
     ]
   end
 end
