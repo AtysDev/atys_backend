@@ -62,7 +62,7 @@ defmodule Vault.Route.Encrypt do
            Project.can_machine_access(%{
              auth_header: auth_header,
              request_id: request_id,
-             id: project_id
+             project_id: project_id
            }),
          {:ok, encrypted_machine_key} <-
            get_encrypted_machine_key(%{
