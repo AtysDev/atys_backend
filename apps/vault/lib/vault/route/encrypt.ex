@@ -45,7 +45,8 @@ defmodule Vault.Route.Encrypt do
           |> ExJsonSchema.Schema.resolve()
 
   def encrypt(%Conn{path_info: ["encrypt"], method: "POST"} = conn, _opts) do
-    auth_header = Application.get_env(:vault, :secret_auth_header)
+    secret_auth_header = Application.get_env(:vault, :secret_auth_header)
+    project_auth_header = Application.get_env(:vault, :project_auth_header)
     [request_id] = Conn.get_resp_header(conn, "x-request-id")
 
     with {:ok, conn,
@@ -60,13 +61,13 @@ defmodule Vault.Route.Encrypt do
           }} <- Responder.get_values(conn, @schema, frontend_request: true),
          {:ok, _resp} <-
            Project.can_machine_access(%{
-             auth_header: auth_header,
+             auth_header: project_auth_header,
              request_id: request_id,
              project_id: project_id
            }),
          {:ok, encrypted_machine_key} <-
            get_encrypted_machine_key(%{
-             auth_header: auth_header,
+             auth_header: secret_auth_header,
              request_id: request_id,
              machine_key_id: machine_key_id,
              project_id: project_id

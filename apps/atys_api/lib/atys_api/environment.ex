@@ -35,4 +35,6 @@ defmodule AtysApi.Environment do
       {env_name, "http://localhost:#{port}"}
     end)
   end
+
+  def get_port(name), do: Map.fetch!(@services, name)
 end

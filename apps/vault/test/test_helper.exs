@@ -1,4 +1,7 @@
-Application.stop(:project)
+Application.stop(:project_api)
 Application.stop(:secret)
+Application.stop(:project)
 Application.ensure_all_started(:vault)
+Application.ensure_all_started(:project_api)
+Application.ensure_all_started(:secret)
 ExUnit.start()

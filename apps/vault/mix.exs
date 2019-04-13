@@ -33,7 +33,8 @@ defmodule Vault.MixProject do
       {:mox, "~> 0.5.0", only: :test},
       {:plug_cowboy, "~> 2.0"},
       {:project, in_umbrella: true, only: :test, env: Mix.env()},
-      {:secret, in_umbrella: true, only: :test, env: Mix.env()},
+      {:project_api, in_umbrella: true, only: :test, env: Mix.env()},
+      {:secret, in_umbrella: true, only: :test, env: Mix.env()}
     ]
   end
 end
