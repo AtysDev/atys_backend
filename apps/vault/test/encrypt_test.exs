@@ -15,6 +15,8 @@ defmodule VaultEncryptTest do
     conn = call_create(context, %{machine_key: @machine_key, payload: "hello world", extra: %{}})
     assert 200 = conn.status
     %{"data" => %{"ciphertext" => ciphertext}} = Jason.decode!(conn.resp_body)
+    assert {:ok, message_serialized} = Atys.Crypto.AES.decrypt_256(@key, ciphertext)
+    assert {:ok, %{plaintext: "hello world"}} = Atys.Crypto.Message.deserialize(message_serialized)
   end
 
   defp get_token() do

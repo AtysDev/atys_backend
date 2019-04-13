@@ -1,4 +1,5 @@
 defmodule Vault.Route.Encrypt do
+  alias Atys.Crypto.Message
   alias AtysApi.{Errors, Responder}
   alias AtysApi.Service.{Project, Secret}
   alias Plug.Conn
@@ -6,7 +7,7 @@ defmodule Vault.Route.Encrypt do
   use Plug.Builder
   require Errors
 
-  plug(SideUnchanneler, send_after_ms: 25)
+  plug(SideUnchanneler, send_after_ms: 50)
   plug(:encrypt)
   plug(SideUnchanneler, execute: true)
 
@@ -31,10 +32,10 @@ defmodule Vault.Route.Encrypt do
                   "id" => %{
                     "type" => ["number", "string"]
                   },
-                  "parity_even" => %{
+                  "parity" => %{
                     "type" => "boolean"
                   },
-                  "csv_hash" => %{
+                  "csv" => %{
                     "type" => "string"
                   }
                 }
@@ -57,8 +58,9 @@ defmodule Vault.Route.Encrypt do
               "machine_key" => machine_key,
               "payload" => payload,
               "extra" => extra
-            }
+            } = data
           }} <- Responder.get_values(conn, @schema, frontend_request: true),
+         extra <- Map.get(data, "extra", %{}),
          {:ok, _resp} <-
            Project.can_machine_access(%{
              auth_header: project_auth_header,
@@ -126,7 +128,15 @@ defmodule Vault.Route.Encrypt do
   end
 
   defp serialize_payload(%{project_id: project_id, payload: payload, extra: extra}) do
-    case Jason.encode(%{project_id: project_id, payload: payload, extra: extra}) do
+    %Message{
+      plaintext: payload,
+      project_id: project_id,
+      id: Map.get(extra, "id"),
+      parity: Map.get(extra, "parity"),
+      csv: Map.get(extra, "csv")
+    }
+    |> Message.serialize()
+    |> case do
       {:ok, json} -> {:ok, json}
       {:error, _reason} -> {:error, Errors.reason(:cannot_encode_request)}
     end
